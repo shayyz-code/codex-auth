@@ -12,6 +12,7 @@
 
 - Run `go test ./...` before handing off Go changes.
 - Run `go build -o bin/codex-su ./cmd/codex-su` for CLI behavior changes.
+- Prefer Cobra commands and command tests for CLI behavior changes.
 - For documentation-only changes, run a quick spell/readability pass and report that no code checks were needed.
 - If checks cannot run, state the exact command and failure.
 

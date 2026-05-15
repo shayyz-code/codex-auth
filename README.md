@@ -55,4 +55,4 @@ Notes:
 
 - Works on macOS/Linux (symlink) and Windows (copy).
 - Release binaries are built for macOS, Linux, and Windows from tagged releases.
-- Set `CODEX_HOME` to use a nonstandard Codex config directory for tests, automation, or isolated environments.
+- Set `CODEX_HOME` or pass `--codex-home <path>` to use a nonstandard Codex config directory for tests, automation, or isolated environments.

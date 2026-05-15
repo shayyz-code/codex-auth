@@ -9,10 +9,5 @@ import (
 var version = "dev"
 
 func main() {
-	app, err := cli.New(version)
-	if err != nil {
-		_, _ = os.Stderr.WriteString(err.Error() + "\n")
-		os.Exit(1)
-	}
-	os.Exit(app.Run(os.Args[1:]))
+	os.Exit(cli.Execute(version, os.Args[1:], os.Stdin, os.Stdout, os.Stderr))
 }

@@ -4,10 +4,14 @@
   "private": false,
   "description": "A command-line tool to switch between multiple Codex accounts, without needing to relog.",
   "license": "MIT",
+  "bin": {
+    "codex-su": "bin/codex-su"
+  },
   "scripts": {
     "build": "go build -o bin/codex-su ./cmd/codex-su",
     "test": "go test ./...",
-    "ci": "go test ./... && go build -o bin/codex-su ./cmd/codex-su"
+    "ci": "go test ./... && go build -o bin/codex-su ./cmd/codex-su",
+    "prepack": "npm run build"
   },
   "files": [
     "bin",

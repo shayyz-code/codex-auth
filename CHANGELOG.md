@@ -12,6 +12,7 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 - Standardized README usage examples around the production command name.
 - Migrated the CLI implementation from TypeScript/oClif to a Go binary.
 - Replaced Node CI with Go test and build checks.
+- Replaced handwritten Go argument parsing with Cobra.
 
 ### Added
 
@@ -20,3 +21,5 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 - Added `CODEX_HOME` support for tests, automation, and isolated environments.
 - Added account-service tests for snapshot, switch, current-account, and validation behavior.
 - Added cross-platform release binary build scaffolding with SHA-256 checksums.
+- Added CLI workflow tests for command parsing, failures, version output, and `--codex-home`.
+- Added npm `bin` metadata and a prepack build so package dry runs expose the `codex-su` executable.
