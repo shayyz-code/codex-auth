@@ -16,3 +16,4 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 - Added CI and release workflow scaffolding.
 - Added migration, release, todo, and agent operation documentation.
 - Added `CODEX_HOME` support for tests, automation, and isolated environments.
+- Added account-service tests for snapshot, switch, current-account, and validation behavior.

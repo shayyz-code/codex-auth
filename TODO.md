@@ -2,7 +2,7 @@
 
 ## Current TypeScript CLI
 
-- [ ] Add unit tests for account name validation, snapshot creation, account switching, and current-account detection.
+- [x] Add unit tests for account name validation, snapshot creation, account switching, and current-account detection.
 - [ ] Replace direct writes with atomic temp-file writes where state files can be partially written.
 - [ ] Add `--json` output for scripts and automation.
 - [ ] Add `--codex-home <path>` flag support alongside the existing `CODEX_HOME` override.
