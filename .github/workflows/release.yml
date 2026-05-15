@@ -8,40 +8,76 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
-  npm:
-    name: Publish npm package
+  binaries:
+    name: Build release binaries
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: darwin
+            goarch: amd64
+            artifact: codex-su-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            artifact: codex-su-darwin-arm64
+          - goos: linux
+            goarch: amd64
+            artifact: codex-su-linux-amd64
+          - goos: linux
+            goarch: arm64
+            artifact: codex-su-linux-arm64
+          - goos: windows
+            goarch: amd64
+            artifact: codex-su-windows-amd64.exe
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          node-version: 20
-          cache: npm
-          registry-url: https://registry.npmjs.org
+          go-version-file: go.mod
+          cache: true
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Test
+        run: go test ./...
 
-      - name: Run CI checks
-        run: npm run ci
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" -o "dist/${{ matrix.artifact }}" ./cmd/codex-su
 
-      - name: Pack npm artifact
-        run: npm pack
+      - name: Generate checksum
+        run: shasum -a 256 "dist/${{ matrix.artifact }}" > "dist/${{ matrix.artifact }}.sha256"
 
-      - name: Upload npm artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: npm-package
-          path: codex-su-*.tgz
+          name: ${{ matrix.artifact }}
+          path: |
+            dist/${{ matrix.artifact }}
+            dist/${{ matrix.artifact }}.sha256
 
-      - name: Publish to npm
+      - name: Publish GitHub Release artifacts
         if: startsWith(github.ref, 'refs/tags/')
-        run: npm publish --provenance --access public
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/${{ matrix.artifact }}
+            dist/${{ matrix.artifact }}.sha256
+          fail_on_unmatched_files: true
+  package-manager-plan:
+    name: Package manager release plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release channels
+        run: |
+          echo "GitHub binary releases are active for tags."
+          echo "Homebrew, npm, Scoop, Winget, and AUR should be enabled after their package metadata is added and tested."
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

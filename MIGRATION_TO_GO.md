@@ -4,10 +4,18 @@
 
 Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving current user workflows and making production distribution simpler.
 
-## Current App
+## Previous App
 
 - Runtime: Node.js 18+.
 - CLI framework: oclif.
+- Commands: `save`, `use`, `list`, `current`.
+- State paths: `~/.codex/auth.json`, `~/.codex/accounts/*.json`, `~/.codex/current`.
+- Platform behavior: symlink on macOS/Linux, copy on Windows.
+
+## Current App
+
+- Runtime: native Go binary.
+- Dependencies: Go standard library only.
 - Commands: `save`, `use`, `list`, `current`.
 - State paths: `~/.codex/auth.json`, `~/.codex/accounts/*.json`, `~/.codex/current`.
 - Platform behavior: symlink on macOS/Linux, copy on Windows.
@@ -22,16 +30,17 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 
 2. Introduce Go implementation
 
-- Create `go.mod` with packages for commands, account storage, and filesystem operations.
-- Use the standard library where possible; keep dependencies minimal.
-- Add golden tests that compare expected command output to the TypeScript CLI behavior.
-- Keep the TypeScript CLI as the reference until Go reaches parity.
+- Done: created `go.mod` with packages for commands, account storage, and filesystem operations.
+- Done: the current implementation uses the standard library only.
+- Done: account-service behavior is covered by Go tests.
+- Remaining: add CLI output tests and `--json` output before the next release.
 
 3. Switch production binary
 
-- Change npm package to ship the Go binary through platform-specific optional packages or a postinstall downloader.
-- Keep `codex-su` as the only production command.
-- Publish checksums and signatures for every binary artifact.
+- Done: `codex-su` is the only production command.
+- Done: tagged releases build cross-platform binaries with SHA-256 checksums.
+- Remaining: publish signatures for every binary artifact.
+- Remaining: change npm package to ship the Go binary through platform-specific optional packages or a postinstall downloader.
 
 4. Expand distribution
 

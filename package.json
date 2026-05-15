@@ -1,25 +1,16 @@
 {
   "name": "codex-su",
-  "version": "0.1.1",
-  "description": "A command-line tool that lets you manage and switch between multiple Codex accounts.",
+  "version": "0.1.2",
+  "private": false,
+  "description": "A command-line tool to switch between multiple Codex accounts, without needing to relog.",
   "license": "MIT",
-  "bin": {
-    "codex-su": "dist/index.js"
-  },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test test/*.test.cjs",
-    "ci": "npm run typecheck && npm run build && npm test",
-    "prepublishOnly": "npm run build"
-  },
-  "engines": {
-    "node": ">=18"
+    "build": "go build -o bin/codex-su ./cmd/codex-su",
+    "test": "go test ./...",
+    "ci": "go test ./... && go build -o bin/codex-su ./cmd/codex-su"
   },
   "files": [
-    "dist",
+    "bin",
     "README.md",
     "LICENSE"
   ],
@@ -41,19 +32,5 @@
     "url": "https://github.com/shayyz-code/codex-su/issues"
   },
   "homepage": "https://github.com/shayyz-code/codex-su#readme",
-  "author": "shayyz-code",
-  "dependencies": {
-    "@oclif/core": "^3.0.0",
-    "prompts": "^2.4.2",
-    "tslib": "^2.8.1"
-  },
-  "devDependencies": {
-    "@types/node": "^24.10.0",
-    "@types/prompts": "^2.4.9",
-    "typescript": "^5.6.3"
-  },
-  "oclif": {
-    "bin": "codex-su",
-    "commands": "./dist/commands"
-  }
+  "author": "shayyz-code"
 }

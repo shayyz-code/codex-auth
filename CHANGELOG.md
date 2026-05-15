@@ -10,6 +10,8 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 
 - Renamed the CLI package and command from `codex-auth` to `codex-su`.
 - Standardized README usage examples around the production command name.
+- Migrated the CLI implementation from TypeScript/oClif to a Go binary.
+- Replaced Node CI with Go test and build checks.
 
 ### Added
 
@@ -17,3 +19,4 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 - Added migration, release, todo, and agent operation documentation.
 - Added `CODEX_HOME` support for tests, automation, and isolated environments.
 - Added account-service tests for snapshot, switch, current-account, and validation behavior.
+- Added cross-platform release binary build scaffolding with SHA-256 checksums.

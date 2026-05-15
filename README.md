@@ -11,12 +11,18 @@ Codex stores your authentication session in a single `auth.json` file. This tool
 
 ## Requirements
 
-- Node.js 18 or newer
+- Go 1.24 or newer to build from source.
 
-## Install (npm)
+## Install From Source
 
 ```sh
-npm i -g codex-su
+go install github.com/shayyz-code/codex-su/cmd/codex-su@latest
+```
+
+## Build Locally
+
+```sh
+go build -o bin/codex-su ./cmd/codex-su
 ```
 
 ## Usage
@@ -48,5 +54,5 @@ codex-su current
 Notes:
 
 - Works on macOS/Linux (symlink) and Windows (copy).
-- Requires Node 18+.
+- Release binaries are built for macOS, Linux, and Windows from tagged releases.
 - Set `CODEX_HOME` to use a nonstandard Codex config directory for tests, automation, or isolated environments.

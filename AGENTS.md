@@ -10,7 +10,8 @@
 
 ## Standard Checks
 
-- Run `npm run ci` before handing off TypeScript changes.
+- Run `go test ./...` before handing off Go changes.
+- Run `go build -o bin/codex-su ./cmd/codex-su` for CLI behavior changes.
 - For documentation-only changes, run a quick spell/readability pass and report that no code checks were needed.
 - If checks cannot run, state the exact command and failure.
 
@@ -31,6 +32,6 @@ Common types: `feat`, `fix`, `docs`, `test`, `build`, `ci`, `refactor`, `chore`.
 ## Migration Principles
 
 - Match the existing CLI behavior first, then improve internals.
-- Add tests around current behavior before porting to Go.
+- Keep Go tests around account storage behavior and add CLI tests when output changes.
 - Keep command names, output formats, and storage paths intentional and documented.
 - Treat release automation as production code: tagged releases should be repeatable, auditable, and reversible.
