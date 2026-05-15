@@ -9,7 +9,7 @@ export default class ListCommand extends BaseCommand {
       const current = await this.accounts.getCurrentAccountName();
 
       if (!accounts.length) {
-        this.log("No saved Codex accounts yet. Run `codex-auth save <name>`.");
+        this.log("No saved Codex accounts yet. Run `codex-su save <name>`.");
         return;
       }
 

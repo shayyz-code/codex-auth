@@ -22,7 +22,7 @@ export class AccountNotFoundError extends CodexAuthError {
 
 export class NoAccountsSavedError extends CodexAuthError {
   constructor() {
-    super(`No saved Codex accounts yet. Run "codex-auth save <name>" first.`);
+    super(`No saved Codex accounts yet. Run "codex-su save <name>" first.`);
   }
 }
 

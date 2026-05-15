@@ -1,13 +1,13 @@
-# codex-auth
+# codex-su
 
-A command-line tool that lets you manage and switch between multiple Codex accounts instantly, no more constant logins and logouts.
+A command-line tool that lets you manage and switch between multiple Codex accounts.
 
 > [!WARNING]
 > Not affiliated with OpenAI or Codex. Not an official tool.
 
 ## How it Works
 
-Codex stores your authentication session in a single `auth.json` file. This tool works by creating named snapshots of that file for each of your accounts. When you want to switch, `codex-auth` swaps the active `~/.codex/auth.json` with the snapshot you select, instantly changing your logged-in account.
+Codex stores your authentication session in a single `auth.json` file. This tool works by creating named snapshots of that file for each of your accounts. When you want to switch, `codex-su` swaps the active `~/.codex/auth.json` with the snapshot you select, instantly changing your logged-in account.
 
 ## Requirements
 
@@ -16,36 +16,37 @@ Codex stores your authentication session in a single `auth.json` file. This tool
 ## Install (npm)
 
 ```sh
-npm i -g codex-auth
+npm i -g codex-su
 ```
 
 ## Usage
 
 ```sh
 # save the current logged-in token as a named account
-codex-auth save <name>
+codex-su save <name>
 
 # switch active account (symlinks on macOS/Linux; copies on Windows)
-codex-auth use <name>
+codex-su use <name>
 
 # or pick interactively
-codex-auth use
+codex-su use
 
 # list accounts
-codex-auth list
+codex-su list
 
 # show current account name
-codex-auth current
+codex-su current
 ```
 
 ### Command reference
 
-- `codex-auth save <name>` – Validates `<name>`, ensures `auth.json` exists, then snapshots it to `~/.codex/accounts/<name>.json`.
-- `codex-auth use [name]` – Accepts a name or launches an interactive selector with the current account pre-selected. Copies on Windows, creates a symlink elsewhere, and records the active name.
-- `codex-auth list` – Lists all saved snapshots alphabetically and marks the active one with `*`.
-- `codex-auth current` – Prints the active account name, or a friendly message if none is active.
+- `codex-su save <name>` - validates `<name>`, ensures `auth.json` exists, then snapshots it to `~/.codex/accounts/<name>.json`.
+- `codex-su use [name]` - accepts a name or launches an interactive selector with the current account pre-selected. Copies on Windows, creates a symlink elsewhere, and records the active name.
+- `codex-su list` - lists all saved snapshots alphabetically and marks the active one with `*`.
+- `codex-su current` - prints the active account name, or a friendly message if none is active.
 
 Notes:
 
 - Works on macOS/Linux (symlink) and Windows (copy).
 - Requires Node 18+.
+- Set `CODEX_HOME` to use a nonstandard Codex config directory for tests, automation, or isolated environments.
