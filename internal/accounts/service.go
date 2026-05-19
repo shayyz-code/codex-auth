@@ -1,6 +1,7 @@
 package accounts
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"os"
@@ -126,7 +127,8 @@ func (s *Service) SaveAccount(rawName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if _, err := os.Stat(s.paths.AuthPath); err != nil {
+	authContents, err := os.ReadFile(s.paths.AuthPath)
+	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return "", AuthFileMissingError{Path: s.paths.AuthPath}
 		}
@@ -135,7 +137,16 @@ func (s *Service) SaveAccount(rawName string) (string, error) {
 	if err := os.MkdirAll(s.paths.AccountsDir, 0o700); err != nil {
 		return "", err
 	}
-	if err := copyFileAtomic(s.paths.AuthPath, s.accountFilePath(name), 0o600); err != nil {
+
+	existingName, ok, err := s.accountNameForAuthContents(authContents, name)
+	if err != nil {
+		return "", err
+	}
+	if ok {
+		return existingName, nil
+	}
+
+	if err := writeFileAtomic(s.accountFilePath(name), authContents, 0o600); err != nil {
 		return "", err
 	}
 	return name, nil
@@ -178,6 +189,27 @@ func (s *Service) UseAccount(rawName string) (string, error) {
 	return name, nil
 }
 
+func (s *Service) AuthFileExists() (bool, error) {
+	if _, err := os.Stat(s.paths.AuthPath); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+func (s *Service) CurrentAuthSavedAccount() (string, bool, error) {
+	authContents, err := os.ReadFile(s.paths.AuthPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", false, nil
+		}
+		return "", false, err
+	}
+	return s.accountNameForAuthContents(authContents, "")
+}
+
 func NormalizeAccountName(rawName string) (string, error) {
 	trimmed := strings.TrimSpace(rawName)
 	if trimmed == "" {
@@ -195,6 +227,29 @@ func NormalizeAccountName(rawName string) (string, error) {
 
 func (s *Service) accountFilePath(name string) string {
 	return filepath.Join(s.paths.AccountsDir, name+".json")
+}
+
+func (s *Service) accountNameForAuthContents(authContents []byte, skipName string) (string, bool, error) {
+	names, err := s.ListAccountNames()
+	if err != nil {
+		return "", false, err
+	}
+	for _, candidate := range names {
+		if skipName != "" && candidate == skipName {
+			continue
+		}
+		contents, err := os.ReadFile(s.accountFilePath(candidate))
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			return "", false, err
+		}
+		if bytes.Equal(contents, authContents) {
+			return candidate, true, nil
+		}
+	}
+	return "", false, nil
 }
 
 func replaceSymlink(target string, linkPath string) error {

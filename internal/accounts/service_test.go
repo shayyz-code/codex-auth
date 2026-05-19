@@ -88,6 +88,66 @@ func TestUseAccountActivatesSavedAccountAndRecordsCurrent(t *testing.T) {
 	}
 }
 
+func TestSaveAccountDoesNotDuplicateExistingAuthSnapshot(t *testing.T) {
+	paths := NewPaths(t.TempDir())
+	service := NewService(paths)
+
+	writeAuth(t, paths, `{"token":"same"}`)
+	name, err := service.SaveAccount("work")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name != "work" {
+		t.Fatalf("name = %q, want work", name)
+	}
+
+	name, err = service.SaveAccount("duplicate")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name != "work" {
+		t.Fatalf("duplicate save name = %q, want existing work", name)
+	}
+
+	names, err := service.ListAccountNames()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := join(names), "work"; got != want {
+		t.Fatalf("names = %q, want %q", got, want)
+	}
+}
+
+func TestCurrentAuthSavedAccountMatchesByContent(t *testing.T) {
+	paths := NewPaths(t.TempDir())
+	service := NewService(paths)
+
+	if err := os.MkdirAll(paths.AccountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(paths.AccountsDir, "work.json"), []byte(`{"token":"work"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	writeAuth(t, paths, `{"token":"work"}`)
+
+	name, ok, err := service.CurrentAuthSavedAccount()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok || name != "work" {
+		t.Fatalf("current auth saved account = %q, %v; want work, true", name, ok)
+	}
+
+	writeAuth(t, paths, `{"token":"new"}`)
+	name, ok, err = service.CurrentAuthSavedAccount()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok || name != "" {
+		t.Fatalf("current auth saved account = %q, %v; want empty, false", name, ok)
+	}
+}
+
 func TestCurrentAccountNameInfersSymlinkTarget(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("symlink inference is not used on Windows")

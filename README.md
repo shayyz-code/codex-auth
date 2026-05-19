@@ -73,8 +73,8 @@ codex-auth current
 
 ### Command reference
 
-- `codex-auth save <name>` - validates `<name>`, ensures `auth.json` exists, then snapshots it to `~/.codex/accounts/<name>.json`.
-- `codex-auth use [name]` - accepts a name or launches an interactive selector with the current account pre-selected. Copies on Windows, creates a symlink elsewhere, and records the active name.
+- `codex-auth save <name>` - validates `<name>`, ensures `auth.json` exists, then snapshots it to `~/.codex/accounts/<name>.json`. If the same auth tokens are already saved under another name, the existing account is reused instead of creating a duplicate snapshot.
+- `codex-auth use [name]` - accepts a name or launches an interactive selector with the current account pre-selected. If `<name>` is mistyped, the closest saved account is suggested. Before switching away from an unsaved live Codex login, interactive mode asks whether to save it. Copies on Windows, creates a symlink elsewhere, and records the active name.
 - `codex-auth list` - lists all saved snapshots alphabetically and marks the active one with `*`.
 - `codex-auth current` - prints the active account name, or a friendly message if none is active.
 

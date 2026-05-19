@@ -69,6 +69,60 @@ func TestExecuteUsePromptsForAccount(t *testing.T) {
 	}
 }
 
+func TestExecuteUseSuggestsClosestAccountName(t *testing.T) {
+	codexHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(codexHome, "accounts"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(codexHome, "accounts", "work.json"), []byte(`{"token":"work"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	_, stderr, code := runCLI(t, nil, "--codex-home", codexHome, "use", "wrk")
+	if code == 0 {
+		t.Fatal("use with mistyped account succeeded")
+	}
+	if !strings.Contains(stderr, `No saved Codex account named "wrk" was found. Did you mean "work"?`) {
+		t.Fatalf("stderr = %q", stderr)
+	}
+}
+
+func TestExecuteUsePromptsToSaveUnsavedAuthBeforeSwitching(t *testing.T) {
+	codexHome := t.TempDir()
+	accountsDir := filepath.Join(codexHome, "accounts")
+	if err := os.MkdirAll(accountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(accountsDir, "work.json"), []byte(`{"token":"work"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(codexHome, "auth.json"), []byte(`{"token":"new-login"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, code := runCLI(t, strings.NewReader("y\npersonal\n"), "--codex-home", codexHome, "use", "work")
+	if code != 0 {
+		t.Fatalf("use exit code = %d, stderr = %q", code, stderr)
+	}
+	if !strings.Contains(stdout, "Current Codex auth is not saved as an account.") {
+		t.Fatalf("use stdout missing save prompt: %q", stdout)
+	}
+	if !strings.Contains(stdout, `Saved current Codex auth tokens as "personal".`) {
+		t.Fatalf("use stdout missing save confirmation: %q", stdout)
+	}
+	if !strings.Contains(stdout, `Switched Codex auth to "work".`) {
+		t.Fatalf("use stdout missing switch confirmation: %q", stdout)
+	}
+
+	contents, err := os.ReadFile(filepath.Join(accountsDir, "personal.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(contents) != `{"token":"new-login"}` {
+		t.Fatalf("personal snapshot = %q", contents)
+	}
+}
+
 func TestExecuteReportsCommandFailures(t *testing.T) {
 	_, stderr, code := runCLI(t, nil, "save")
 	if code == 0 {
