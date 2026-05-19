@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -37,6 +38,7 @@ func Execute(version string, args []string, stdin io.Reader, stdout io.Writer, s
 
 func NewRootCommand(version string, newService serviceFactory) *cobra.Command {
 	var codexHome string
+	var jsonOutput bool
 
 	root := &cobra.Command{
 		Use:           "codex-su",
@@ -46,19 +48,20 @@ func NewRootCommand(version string, newService serviceFactory) *cobra.Command {
 		SilenceUsage:  true,
 	}
 	root.PersistentFlags().StringVar(&codexHome, "codex-home", "", "Codex config directory; defaults to CODEX_HOME or ~/.codex")
+	root.PersistentFlags().BoolVar(&jsonOutput, "json", false, "Output in JSON format")
 
 	serviceForCommand := func() (service, error) {
 		return newService(codexHome)
 	}
 
-	root.AddCommand(newSaveCommand(serviceForCommand))
-	root.AddCommand(newUseCommand(serviceForCommand))
-	root.AddCommand(newListCommand(serviceForCommand))
-	root.AddCommand(newCurrentCommand(serviceForCommand))
+	root.AddCommand(newSaveCommand(serviceForCommand, &jsonOutput))
+	root.AddCommand(newUseCommand(serviceForCommand, &jsonOutput))
+	root.AddCommand(newListCommand(serviceForCommand, &jsonOutput))
+	root.AddCommand(newCurrentCommand(serviceForCommand, &jsonOutput))
 	return root
 }
 
-func newSaveCommand(serviceForCommand func() (service, error)) *cobra.Command {
+func newSaveCommand(serviceForCommand func() (service, error), jsonOutput *bool) *cobra.Command {
 	return &cobra.Command{
 		Use:   "save <name>",
 		Short: "Save the current Codex auth file as a named account",
@@ -72,13 +75,18 @@ func newSaveCommand(serviceForCommand func() (service, error)) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			if *jsonOutput {
+				return printJSON(cmd.OutOrStdout(), map[string]string{"account": savedName})
+			}
+
 			fmt.Fprintf(cmd.OutOrStdout(), "Saved current Codex auth tokens as %q.\n", savedName)
 			return nil
 		},
 	}
 }
 
-func newUseCommand(serviceForCommand func() (service, error)) *cobra.Command {
+func newUseCommand(serviceForCommand func() (service, error), jsonOutput *bool) *cobra.Command {
 	return &cobra.Command{
 		Use:   "use [name]",
 		Short: "Switch Codex auth to a saved account",
@@ -93,6 +101,9 @@ func newUseCommand(serviceForCommand func() (service, error)) *cobra.Command {
 			if len(args) == 1 {
 				accountName = args[0]
 			} else {
+				if *jsonOutput {
+					return errors.New("The [name] argument is required when using --json.")
+				}
 				picked, err := promptForAccount(cmd.InOrStdin(), cmd.OutOrStdout(), accountsService)
 				if err != nil {
 					return err
@@ -104,13 +115,18 @@ func newUseCommand(serviceForCommand func() (service, error)) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			if *jsonOutput {
+				return printJSON(cmd.OutOrStdout(), map[string]string{"account": activated})
+			}
+
 			fmt.Fprintf(cmd.OutOrStdout(), "Switched Codex auth to %q.\n", activated)
 			return nil
 		},
 	}
 }
 
-func newListCommand(serviceForCommand func() (service, error)) *cobra.Command {
+func newListCommand(serviceForCommand func() (service, error), jsonOutput *bool) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "List saved Codex accounts",
@@ -127,6 +143,18 @@ func newListCommand(serviceForCommand func() (service, error)) *cobra.Command {
 			current, ok, err := accountsService.CurrentAccountName()
 			if err != nil {
 				return err
+			}
+
+			if *jsonOutput {
+				res := map[string]any{
+					"accounts": names,
+				}
+				if ok {
+					res["current"] = current
+				} else {
+					res["current"] = nil
+				}
+				return printJSON(cmd.OutOrStdout(), res)
 			}
 
 			if len(names) == 0 {
@@ -146,7 +174,7 @@ func newListCommand(serviceForCommand func() (service, error)) *cobra.Command {
 	}
 }
 
-func newCurrentCommand(serviceForCommand func() (service, error)) *cobra.Command {
+func newCurrentCommand(serviceForCommand func() (service, error), jsonOutput *bool) *cobra.Command {
 	return &cobra.Command{
 		Use:   "current",
 		Short: "Show the active Codex account",
@@ -160,6 +188,17 @@ func newCurrentCommand(serviceForCommand func() (service, error)) *cobra.Command
 			if err != nil {
 				return err
 			}
+
+			if *jsonOutput {
+				res := map[string]any{}
+				if ok {
+					res["account"] = name
+				} else {
+					res["account"] = nil
+				}
+				return printJSON(cmd.OutOrStdout(), res)
+			}
+
 			if !ok {
 				fmt.Fprintln(cmd.OutOrStdout(), "No Codex account is active yet.")
 				return nil
@@ -169,6 +208,13 @@ func newCurrentCommand(serviceForCommand func() (service, error)) *cobra.Command
 		},
 	}
 }
+
+func printJSON(w io.Writer, v any) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(v)
+}
+
 
 func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service) (string, error) {
 	names, err := accountsService.ListAccountNames()

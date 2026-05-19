@@ -56,3 +56,12 @@ Notes:
 - Works on macOS/Linux (symlink) and Windows (copy).
 - Release binaries are built for macOS, Linux, and Windows from tagged releases.
 - Set `CODEX_HOME` or pass `--codex-home <path>` to use a nonstandard Codex config directory for tests, automation, or isolated environments.
+
+## Migrating from `codex-auth`
+
+If you are moving from the legacy `codex-auth` tool:
+
+1.  **Compatible State**: `codex-su` uses the same directory structure (`~/.codex/accounts`) and file format as `codex-auth`. Your existing snapshots will be recognized automatically.
+2.  **Binary Name**: The command has been renamed to `codex-su` to follow the "switch user" convention.
+3.  **Removal**: You can safely uninstall the old tool after installing `codex-su`.
+
