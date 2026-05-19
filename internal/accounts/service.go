@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"sort"
 	"strings"
+	"time"
 )
 
 var accountNamePattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
@@ -164,14 +164,8 @@ func (s *Service) UseAccount(rawName string) (string, error) {
 		return "", err
 	}
 
-	if runtime.GOOS == "windows" {
-		if err := copyFileAtomic(source, s.paths.AuthPath, 0o600); err != nil {
-			return "", err
-		}
-	} else {
-		if err := replaceSymlink(source, s.paths.AuthPath); err != nil {
-			return "", err
-		}
+	if err := copyFileAtomic(source, s.paths.AuthPath, 0o600); err != nil {
+		return "", err
 	}
 
 	if err := writeFileAtomic(s.paths.CurrentNamePath, []byte(name+"\n"), 0o600); err != nil {
@@ -198,15 +192,39 @@ func (s *Service) CurrentAuthSavedAccount() (string, bool, error) {
 		}
 		return "", false, err
 	}
-	return s.accountNameForAuthContents(authContents, "")
+	skipName := ""
+	symlinkName, _, ok, targetChanged, err := s.authSymlinkAccountInfo()
+	if err != nil {
+		return "", false, err
+	}
+	if ok && targetChanged {
+		skipName = symlinkName
+	}
+	return s.accountNameForAuthContents(authContents, skipName)
 }
 
 func (s *Service) SyncCurrentAccount() (string, bool, error) {
+	authContents, authErr := os.ReadFile(s.paths.AuthPath)
+	if authErr != nil && !errors.Is(authErr, os.ErrNotExist) {
+		return "", false, authErr
+	}
 	name, ok, err := s.CurrentAuthSavedAccount()
 	if err != nil {
 		return "", false, err
 	}
 	if !ok {
+		if authErr == nil {
+			if _, symlinkTarget, symlinkOK, targetChanged, err := s.authSymlinkAccountInfo(); err != nil {
+				return "", false, err
+			} else if symlinkOK && targetChanged {
+				if err := quarantineOverwrittenAccount(symlinkTarget); err != nil {
+					return "", false, err
+				}
+				if err := writeFileAtomic(s.paths.AuthPath, authContents, 0o600); err != nil {
+					return "", false, err
+				}
+			}
+		}
 		if err := os.Remove(s.paths.CurrentNamePath); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return "", false, err
 		}
@@ -237,6 +255,59 @@ func (s *Service) accountFilePath(name string) string {
 	return filepath.Join(s.paths.AccountsDir, name+".json")
 }
 
+func (s *Service) authSymlinkAccountInfo() (string, string, bool, bool, error) {
+	stat, err := os.Lstat(s.paths.AuthPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", "", false, false, nil
+		}
+		return "", "", false, false, err
+	}
+	if stat.Mode()&os.ModeSymlink == 0 {
+		return "", "", false, false, nil
+	}
+
+	rawTarget, err := os.Readlink(s.paths.AuthPath)
+	if err != nil {
+		return "", "", false, false, err
+	}
+	resolvedTarget := rawTarget
+	if !filepath.IsAbs(resolvedTarget) {
+		resolvedTarget = filepath.Join(filepath.Dir(s.paths.AuthPath), rawTarget)
+	}
+	resolvedTarget, err = filepath.Abs(resolvedTarget)
+	if err != nil {
+		return "", "", false, false, err
+	}
+	accountsRoot, err := filepath.Abs(s.paths.AccountsDir)
+	if err != nil {
+		return "", "", false, false, err
+	}
+	relative, err := filepath.Rel(accountsRoot, resolvedTarget)
+	if err != nil || strings.HasPrefix(relative, "..") || filepath.IsAbs(relative) {
+		return "", "", false, false, nil
+	}
+	targetStat, err := os.Stat(resolvedTarget)
+	if err != nil {
+		return "", "", false, false, err
+	}
+
+	base := filepath.Base(resolvedTarget)
+	return strings.TrimSuffix(base, filepath.Ext(base)), resolvedTarget, true, targetStat.ModTime().After(stat.ModTime()), nil
+}
+
+func quarantineOverwrittenAccount(path string) error {
+	destination := path + ".overwritten-" + strings.ReplaceAll(timeNowUTC(), ":", "")
+	if err := os.Rename(path, destination); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return nil
+}
+
+func timeNowUTC() string {
+	return time.Now().UTC().Format("20060102T150405Z")
+}
+
 func (s *Service) accountNameForAuthContents(authContents []byte, skipName string) (string, bool, error) {
 	names, err := s.ListAccountNames()
 	if err != nil {
@@ -258,17 +329,6 @@ func (s *Service) accountNameForAuthContents(authContents []byte, skipName strin
 		}
 	}
 	return "", false, nil
-}
-
-func replaceSymlink(target string, linkPath string) error {
-	absoluteTarget, err := filepath.Abs(target)
-	if err != nil {
-		return err
-	}
-	if err := os.Remove(linkPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
-	}
-	return os.Symlink(absoluteTarget, linkPath)
 }
 
 func copyFileAtomic(sourcePath string, destinationPath string, mode os.FileMode) error {

@@ -1,10 +1,12 @@
 package accounts
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestSaveAccountSnapshotsAuthAndListSortsAccounts(t *testing.T) {
@@ -77,14 +79,12 @@ func TestUseAccountActivatesSavedAccountAndRecordsCurrent(t *testing.T) {
 		t.Fatalf("auth = %q", contents)
 	}
 
-	if runtime.GOOS != "windows" {
-		info, err := os.Lstat(paths.AuthPath)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if info.Mode()&os.ModeSymlink == 0 {
-			t.Fatal("auth.json is not a symlink")
-		}
+	info, err := os.Lstat(paths.AuthPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		t.Fatal("auth.json is a symlink")
 	}
 }
 
@@ -145,6 +145,97 @@ func TestCurrentAuthSavedAccountMatchesByContent(t *testing.T) {
 	}
 	if ok || name != "" {
 		t.Fatalf("current auth saved account = %q, %v; want empty, false", name, ok)
+	}
+}
+
+func TestCurrentAuthSavedAccountDoesNotTrustAuthSymlinkTarget(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink compatibility is not used on Windows")
+	}
+
+	paths := NewPaths(t.TempDir())
+	service := NewService(paths)
+	accountPath := filepath.Join(paths.AccountsDir, "work.json")
+
+	if err := os.MkdirAll(paths.AccountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(accountPath, []byte(`{"token":"new-login-through-link"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(accountPath, paths.AuthPath); err != nil {
+		t.Fatal(err)
+	}
+	future := time.Now().Add(time.Hour)
+	if err := os.Chtimes(accountPath, future, future); err != nil {
+		t.Fatal(err)
+	}
+
+	name, ok, err := service.CurrentAuthSavedAccount()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok || name != "" {
+		t.Fatalf("current auth saved account = %q, %v; want empty, false", name, ok)
+	}
+}
+
+func TestSyncCurrentAccountDetachesModifiedAuthSymlink(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink compatibility is not used on Windows")
+	}
+
+	paths := NewPaths(t.TempDir())
+	service := NewService(paths)
+	accountPath := filepath.Join(paths.AccountsDir, "work.json")
+
+	if err := os.MkdirAll(paths.AccountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(accountPath, []byte(`{"token":"new-login-through-link"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(paths.CurrentNamePath, []byte("work\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(accountPath, paths.AuthPath); err != nil {
+		t.Fatal(err)
+	}
+	future := time.Now().Add(time.Hour)
+	if err := os.Chtimes(accountPath, future, future); err != nil {
+		t.Fatal(err)
+	}
+
+	name, ok, err := service.SyncCurrentAccount()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok || name != "" {
+		t.Fatalf("synced current = %q, %v; want empty, false", name, ok)
+	}
+	info, err := os.Lstat(paths.AuthPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		t.Fatal("auth.json is still a symlink")
+	}
+	if _, err := os.Stat(accountPath); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("account path exists after quarantine: %v", err)
+	}
+	matches, err := filepath.Glob(accountPath + ".overwritten-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("quarantined accounts = %v, want one", matches)
+	}
+	contents, err := os.ReadFile(paths.AuthPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(contents) != `{"token":"new-login-through-link"}` {
+		t.Fatalf("auth = %q", contents)
 	}
 }
 
