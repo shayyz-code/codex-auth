@@ -3,8 +3,8 @@
 ## Working Rules
 
 - Prefer small, reviewable changes.
-- Do not commit changes unless the user explicitly asks.
-- After each change, provide a detailed commit message draft the user can run manually.
+- Commit completed changes yourself after checks pass, unless the user explicitly asks not to commit.
+- Use the commit message format below and mention the commit hash in the final response.
 - Preserve user edits. Do not revert unrelated changes in the worktree.
 - Keep production behavior stable unless a task explicitly requests a breaking change.
 
