@@ -119,14 +119,15 @@ func newUseCommand(serviceForCommand func() (service, error), jsonOutput *bool, 
 			}
 
 			accountName := ""
-			input := bufio.NewReader(cmd.InOrStdin())
+			rawInput := cmd.InOrStdin()
+			input := bufio.NewReader(rawInput)
 			if len(args) == 1 {
 				accountName = args[0]
 			} else {
 				if *jsonOutput {
 					return errors.New("The [name] argument is required when using --json.")
 				}
-				picked, err := promptForAccount(input, cmd.OutOrStdout(), accountsService, *colorMode)
+				picked, err := promptForAccount(rawInput, input, cmd.OutOrStdout(), accountsService, *colorMode)
 				if err != nil {
 					return err
 				}
@@ -173,7 +174,8 @@ func newRenameCommand(serviceForCommand func() (service, error), jsonOutput *boo
 			if err != nil {
 				return err
 			}
-			input := bufio.NewReader(cmd.InOrStdin())
+			rawInput := cmd.InOrStdin()
+			input := bufio.NewReader(rawInput)
 			oldRaw := ""
 			newRaw := ""
 			if len(args) == 2 {
@@ -183,7 +185,7 @@ func newRenameCommand(serviceForCommand func() (service, error), jsonOutput *boo
 				if *jsonOutput {
 					return errors.New("The [old-name] and [new-name] arguments are required when using --json.")
 				}
-				oldRaw, err = promptForAccount(input, cmd.OutOrStdout(), accountsService, *colorMode)
+				oldRaw, err = promptForAccount(rawInput, input, cmd.OutOrStdout(), accountsService, *colorMode)
 				if err != nil {
 					return err
 				}
@@ -374,19 +376,19 @@ func printAccountsTable(stdout io.Writer, infos []accounts.AccountInfo, current 
 	if style.enabled {
 		fmt.Fprintln(stdout, style.title("Saved Codex accounts"))
 	}
-	border := "+" + strings.Repeat("-", len("Active")+2) + "+" + strings.Repeat("-", nameWidth+2) + "+" + strings.Repeat("-", emailWidth+2) + "+"
-	fmt.Fprintln(stdout, border)
-	fmt.Fprintf(stdout, "| %-6s | %-*s | %-*s |\n", "Active", nameWidth, "Name", emailWidth, "Email")
-	fmt.Fprintln(stdout, border)
+	top, middle, bottom := tableBorders([]int{len("Active"), nameWidth, emailWidth})
+	fmt.Fprintln(stdout, top)
+	fmt.Fprintf(stdout, "│ %-6s │ %-*s │ %-*s │\n", "Active", nameWidth, "Name", emailWidth, "Email")
+	fmt.Fprintln(stdout, middle)
 	for _, info := range infos {
 		active := ""
 		isActive := hasCurrent && current == info.Name
 		if isActive {
 			active = "*"
 		}
-		fmt.Fprintf(stdout, "| %-6s | %-*s | %-*s |\n", active, nameWidth, info.Name, emailWidth, displayEmail(info.Email))
+		fmt.Fprintf(stdout, "│ %-6s │ %-*s │ %-*s │\n", active, nameWidth, info.Name, emailWidth, displayEmail(info.Email))
 	}
-	fmt.Fprintln(stdout, border)
+	fmt.Fprintln(stdout, bottom)
 }
 
 func displayEmail(email string) string {
@@ -394,6 +396,16 @@ func displayEmail(email string) string {
 		return "-"
 	}
 	return email
+}
+
+func tableBorders(widths []int) (string, string, string) {
+	segments := make([]string, 0, len(widths))
+	for _, width := range widths {
+		segments = append(segments, strings.Repeat("─", width+2))
+	}
+	return "┌" + strings.Join(segments, "┬") + "┐",
+		"├" + strings.Join(segments, "┼") + "┤",
+		"└" + strings.Join(segments, "┴") + "┘"
 }
 
 type cliStyle struct {
@@ -626,7 +638,7 @@ func minInt(values ...int) int {
 	return minimum
 }
 
-func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service, colorMode string) (string, error) {
+func promptForAccount(rawStdin io.Reader, stdin *bufio.Reader, stdout io.Writer, accountsService service, colorMode string) (string, error) {
 	infos, err := accountsService.ListAccounts()
 	if err != nil {
 		return "", err
@@ -640,7 +652,7 @@ func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service
 		return "", err
 	}
 
-	if stdinFile, stdinOK := stdin.(*os.File); stdinOK {
+	if stdinFile, stdinOK := rawStdin.(*os.File); stdinOK {
 		if stdoutFile, stdoutOK := stdout.(*os.File); stdoutOK && isTerminal(stdinFile) && isTerminal(stdoutFile) {
 			if name, err := promptForAccountMenu(stdinFile, stdoutFile, infos, current, ok, colorMode); err == nil {
 				return name, nil
@@ -672,7 +684,7 @@ func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service
 	}
 	fmt.Fprint(stdout, style.prompt("Select account: "))
 
-	line, err := promptReader(stdin).ReadString('\n')
+	line, err := stdin.ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
 		return "", err
 	}
@@ -773,10 +785,10 @@ func renderAccountMenu(stdout io.Writer, infos []accounts.AccountInfo, selected 
 			emailWidth = len(displayEmail(info.Email))
 		}
 	}
-	border := "+" + strings.Repeat("-", 4) + "+" + strings.Repeat("-", len("Active")+2) + "+" + strings.Repeat("-", nameWidth+2) + "+" + strings.Repeat("-", emailWidth+2) + "+"
-	fmt.Fprintln(stdout, border)
-	fmt.Fprintf(stdout, "| %-2s | %-6s | %-*s | %-*s |\n", "", "Active", nameWidth, "Name", emailWidth, "Email")
-	fmt.Fprintln(stdout, border)
+	top, middle, bottom := tableBorders([]int{2, len("Active"), nameWidth, emailWidth})
+	fmt.Fprintln(stdout, top)
+	fmt.Fprintf(stdout, "│ %-2s │ %-6s │ %-*s │ %-*s │\n", "", "Active", nameWidth, "Name", emailWidth, "Email")
+	fmt.Fprintln(stdout, middle)
 	lineCount += 3
 	for i, info := range infos {
 		cursor := " "
@@ -788,10 +800,10 @@ func renderAccountMenu(stdout io.Writer, infos []accounts.AccountInfo, selected 
 		if isActive {
 			active = "*"
 		}
-		fmt.Fprintf(stdout, "| %-2s | %-6s | %-*s | %-*s |\n", cursor, active, nameWidth, info.Name, emailWidth, displayEmail(info.Email))
+		fmt.Fprintf(stdout, "│ %-2s │ %-6s │ %-*s │ %-*s │\n", cursor, active, nameWidth, info.Name, emailWidth, displayEmail(info.Email))
 		lineCount++
 	}
-	fmt.Fprintln(stdout, border)
+	fmt.Fprintln(stdout, bottom)
 	lineCount++
 	return lineCount
 }

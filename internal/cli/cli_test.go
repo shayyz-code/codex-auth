@@ -28,7 +28,7 @@ func TestExecuteRunsAccountWorkflowWithCodexHomeFlag(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("list exit code = %d, stderr = %q", code, stderr)
 	}
-	if !strings.Contains(stdout, "| *      | work | -     |") {
+	if !strings.Contains(stdout, "│ *      │ work │ -     │") {
 		t.Fatalf("list stdout = %q", stdout)
 	}
 
@@ -165,11 +165,14 @@ func TestExecuteListRendersAccountTable(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("list exit code = %d, stderr = %q", code, stderr)
 	}
-	if !strings.Contains(stdout, "| Active | Name | Email            |") {
+	if !strings.Contains(stdout, "│ Active │ Name │ Email            │") {
 		t.Fatalf("list stdout missing header: %q", stdout)
 	}
-	if !strings.Contains(stdout, "|        | work | work@example.com |") {
+	if !strings.Contains(stdout, "│        │ work │ work@example.com │") {
 		t.Fatalf("list stdout missing row: %q", stdout)
+	}
+	if !strings.Contains(stdout, "┌") || !strings.Contains(stdout, "┬") || !strings.Contains(stdout, "┘") {
+		t.Fatalf("list stdout missing box border: %q", stdout)
 	}
 }
 
@@ -196,7 +199,7 @@ func TestExecuteListSyncsCurrentFromLiveAuth(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("list exit code = %d, stderr = %q", code, stderr)
 	}
-	if !strings.Contains(stdout, "|        | personal | -     |") || !strings.Contains(stdout, "| *      | work     | -     |") {
+	if !strings.Contains(stdout, "│        │ personal │ -     │") || !strings.Contains(stdout, "│ *      │ work     │ -     │") {
 		t.Fatalf("list stdout = %q", stdout)
 	}
 
