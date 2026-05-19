@@ -1,6 +1,6 @@
 {
   "name": "codex-su",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": false,
   "description": "A command-line tool to switch between multiple Codex accounts, without needing to relog.",
   "license": "MIT",
@@ -16,11 +16,11 @@
     "ci": "npm run test && go build -o bin/codex-su ./cmd/codex-su"
   },
   "optionalDependencies": {
-    "codex-su-darwin-amd64": "0.1.2",
-    "codex-su-darwin-arm64": "0.1.2",
-    "codex-su-linux-amd64": "0.1.2",
-    "codex-su-linux-arm64": "0.1.2",
-    "codex-su-windows-amd64": "0.1.2"
+    "codex-su-darwin-amd64": "0.1.3",
+    "codex-su-darwin-arm64": "0.1.3",
+    "codex-su-linux-amd64": "0.1.3",
+    "codex-su-linux-arm64": "0.1.3",
+    "codex-su-windows-amd64": "0.1.3"
   },
   "files": [
     "npm/codex-su.js",

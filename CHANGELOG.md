@@ -6,6 +6,21 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 
 ## Unreleased
 
+## 0.1.3 - 2026-05-19
+
+### Added
+
+- Added repository tests that assert CI, release, docs, and packaging contracts.
+- Added per-platform npm package metadata, a root npm launcher, binary staging, and tag-gated npm publishing.
+- Added Sigstore keyless signing for tagged release binaries.
+- Added Homebrew formula generation and tag-gated updates for `shayyz-code/homebrew-tap`.
+- Added README badges, installation instructions, and release secret setup notes.
+
+### Changed
+
+- Updated release automation to validate staged npm packages before publishing.
+- Updated migration and distribution milestones to reflect completed Go, npm, signing, and Homebrew work.
+
 ### Changed
 
 - Renamed the CLI package and command from `codex-auth` to `codex-su`.

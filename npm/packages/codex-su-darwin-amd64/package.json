@@ -1,6 +1,6 @@
 {
   "name": "codex-su-darwin-amd64",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "macOS x64 binary for codex-su.",
   "license": "MIT",
   "os": [
