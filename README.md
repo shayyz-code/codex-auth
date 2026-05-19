@@ -116,7 +116,7 @@ See current account and interactive use command for account switching:
 - This is an unofficial tool and is not affiliated with OpenAI or Codex.
 - `codex-auth` manages local Codex auth snapshots. Treat files under `~/.codex` as sensitive credentials.
 - The tool uses regular file copies on all platforms so external Codex logins cannot overwrite saved account snapshots through `auth.json`. Older symlink-based activations are detached automatically if Codex appears to have written through the symlink.
-- Release binaries are built for macOS, Linux, and Windows from tagged releases. Scoop, Winget, Arch AUR, Docker, and other distribution channels are release follow-ups, not blockers for `v0.2.0`.
+- Release binaries are built for macOS, Linux, and Windows from tagged releases. Scoop, Winget, Arch AUR, Docker, and other distribution channels are release follow-ups, not blockers for `v0.2.1`.
 - Set `CODEX_HOME` or pass `--codex-home <path>` to use a nonstandard Codex config directory for tests, automation, or isolated environments.
 
 ## Release Setup
@@ -126,19 +126,19 @@ Tagged releases publish GitHub binaries, npm packages, and the Homebrew tap form
 - `NPM_TOKEN` - npm automation token with publish access to `@shayyz-code/codex-auth` and the platform binary packages.
 - `HOMEBREW_TAP_TOKEN` - GitHub token with write access to `shayyz-code/homebrew-tap`.
 
-Release tags must use the `v*.*.*` format, for example `v0.2.0`.
+Release tags must use the `v*.*.*` format, for example `v0.2.1`.
 
 ### Release checklist
 
-1. Update package metadata with `make version VERSION=0.2.0`.
+1. Update package metadata with `make version VERSION=0.2.1`.
 2. Update `CHANGELOG.md` with the release date and user-facing changes.
 3. Run `make check`.
 4. Commit the release preparation changes.
 5. Create and push the tag:
 
 ```sh
-git tag v0.2.0
-git push origin main v0.2.0
+git tag v0.2.1
+git push origin main v0.2.1
 ```
 
 The release workflow builds binaries, attaches checksums and Sigstore bundles to the GitHub Release, publishes npm packages, and updates the Homebrew tap.

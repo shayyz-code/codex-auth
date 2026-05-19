@@ -40,10 +40,10 @@ Use `--codex-home <path>` or `CODEX_HOME` when testing account behavior so local
 Use the Makefile target so all npm package versions stay aligned:
 
 ```sh
-make version VERSION=0.2.0
+make version VERSION=0.2.1
 ```
 
-This updates the root npm package, platform package versions, and root optional dependency pins. Release tags still use the `v*.*.*` format, such as `v0.2.0`.
+This updates the root npm package, platform package versions, and root optional dependency pins. Release tags still use the `v*.*.*` format, such as `v0.2.1`.
 
 ## Release Preparation
 

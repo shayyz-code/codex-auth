@@ -1,6 +1,6 @@
 {
   "name": "@shayyz-code/codex-auth",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": false,
   "description": "A command-line tool to switch between multiple Codex accounts, without needing to relog.",
   "license": "MIT",
@@ -17,11 +17,11 @@
     "ci": "make check"
   },
   "optionalDependencies": {
-    "@shayyz-code/codex-auth-darwin-amd64": "0.2.0",
-    "@shayyz-code/codex-auth-darwin-arm64": "0.2.0",
-    "@shayyz-code/codex-auth-linux-amd64": "0.2.0",
-    "@shayyz-code/codex-auth-linux-arm64": "0.2.0",
-    "@shayyz-code/codex-auth-windows-amd64": "0.2.0"
+    "@shayyz-code/codex-auth-darwin-amd64": "0.2.1",
+    "@shayyz-code/codex-auth-darwin-arm64": "0.2.1",
+    "@shayyz-code/codex-auth-linux-amd64": "0.2.1",
+    "@shayyz-code/codex-auth-linux-arm64": "0.2.1",
+    "@shayyz-code/codex-auth-windows-amd64": "0.2.1"
   },
   "files": [
     "npm/codex-auth.js",

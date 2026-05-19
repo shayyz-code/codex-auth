@@ -6,6 +6,17 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 
 ## Unreleased
 
+## 0.2.1 - 2026-05-19
+
+### Fixed
+
+- Updated README screenshot documentation tests to match the uploaded screenshot assets.
+
+### Changed
+
+- Bumped root and platform npm packages to `0.2.1`.
+- Updated release documentation examples for `v0.2.1`.
+
 ## 0.2.0 - 2026-05-19
 
 ### Added

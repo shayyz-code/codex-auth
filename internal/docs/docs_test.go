@@ -16,7 +16,7 @@ func TestREADMEDocumentsReleaseSecrets(t *testing.T) {
 	assertContains(t, readme, "HOMEBREW_TAP_TOKEN")
 	assertContains(t, readme, "shayyz-code/homebrew-tap")
 	assertContains(t, readme, "v*.*.*")
-	assertContains(t, readme, "make version VERSION=0.2.0")
+	assertContains(t, readme, "make version VERSION=0.2.1")
 	assertNotContains(t, readme, "pick interactively by number")
 }
 
@@ -51,7 +51,9 @@ func TestREADMEDocumentsScreenshotsAndNotices(t *testing.T) {
 	readme := readREADME(t)
 
 	assertContains(t, readme, "## Screenshots")
-	assertContains(t, readme, "Screenshots for the terminal picker and account table will be added before the `v0.2.0` release.")
+	assertContains(t, readme, "Accounts list table:")
+	assertContains(t, readme, "See current account and interactive use command for account switching:")
+	assertContains(t, readme, "github.com/user-attachments/assets/")
 	assertContains(t, readme, "## Notice")
 	assertContains(t, readme, "Treat files under `~/.codex` as sensitive credentials.")
 	assertContains(t, readme, "Scoop, Winget, Arch AUR, Docker")
@@ -62,7 +64,7 @@ func TestContributingDocumentsChecksAndReleasePreparation(t *testing.T) {
 
 	assertContains(t, contributing, "make check")
 	assertContains(t, contributing, "git diff --check")
-	assertContains(t, contributing, "make version VERSION=0.2.0")
+	assertContains(t, contributing, "make version VERSION=0.2.1")
 	assertContains(t, contributing, "Update `README.md` and `CHANGELOG.md`")
 	assertContains(t, contributing, "Use `--codex-home <path>` or `CODEX_HOME`")
 }
