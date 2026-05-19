@@ -10,8 +10,9 @@
 
 ## Standard Checks
 
-- Run `go test ./...` before handing off Go changes.
-- Run `go build -o bin/codex-auth ./cmd/codex-auth` for CLI behavior changes.
+- Run `make test` before handing off Go or npm launcher changes.
+- Run `make build` for CLI behavior changes.
+- Run `make check` when a change touches shared behavior, release automation, or both Go and npm packaging.
 - Prefer Cobra commands and command tests for CLI behavior changes.
 - For documentation-only changes, run a quick spell/readability pass and report that no code checks were needed.
 - If checks cannot run, state the exact command and failure.

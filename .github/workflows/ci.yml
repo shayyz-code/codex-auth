@@ -21,7 +21,7 @@ jobs:
           cache: true
 
       - name: Run CI checks
-        run: go test ./...
+        run: make test
 
       - name: Build binary
-        run: go build -o bin/codex-auth ./cmd/codex-auth
+        run: make build

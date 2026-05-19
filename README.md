@@ -49,7 +49,7 @@ go install github.com/shayyz-code/codex-auth/cmd/codex-auth@latest
 ### Build locally
 
 ```sh
-go build -o bin/codex-auth ./cmd/codex-auth
+make build
 ```
 
 ## Usage

@@ -14,8 +14,8 @@ func TestCIWorkflowRunsRequiredChecks(t *testing.T) {
 	assertContains(t, workflow, "pull_request:", "pull request trigger")
 	assertContains(t, workflow, "- main", "main branch push trigger")
 	assertContains(t, workflow, "go-version-file: go.mod", "Go version pin")
-	assertContains(t, workflow, "run: go test ./...", "Go test step")
-	assertContains(t, workflow, "run: go build -o bin/codex-auth ./cmd/codex-auth", "CLI build step")
+	assertContains(t, workflow, "run: make test", "test step")
+	assertContains(t, workflow, "run: make build", "CLI build step")
 }
 
 func TestReleaseWorkflowBuildsAuditableTagArtifacts(t *testing.T) {
@@ -26,11 +26,11 @@ func TestReleaseWorkflowBuildsAuditableTagArtifacts(t *testing.T) {
 	assertContains(t, workflow, "permissions:", "workflow permissions")
 	assertContains(t, workflow, "contents: write", "release publishing permission")
 	assertContains(t, workflow, "id-token: write", "npm provenance permission")
-	assertContains(t, workflow, "run: go test ./...", "pre-release test step")
+	assertContains(t, workflow, "run: make test-go", "pre-release test step")
 	assertContains(t, workflow, "GOOS: ${{ matrix.goos }}", "cross-platform GOOS matrix")
 	assertContains(t, workflow, "GOARCH: ${{ matrix.goarch }}", "cross-platform GOARCH matrix")
-	assertContains(t, workflow, "go build -trimpath", "reproducible release build")
-	assertContains(t, workflow, "main.version=${GITHUB_REF_NAME}", "version injection")
+	assertContains(t, workflow, "run: make release-build", "reproducible release build")
+	assertContains(t, workflow, "VERSION: ${{ github.ref_name }}", "version injection")
 	assertContains(t, workflow, "shasum -a 256", "checksum generation")
 	assertContains(t, workflow, "sigstore/cosign-installer@v4.1.0", "Cosign installer")
 	assertContains(t, workflow, "cosign sign-blob", "release binary signing")

@@ -8,12 +8,12 @@
     "codex-auth": "npm/codex-auth.js"
   },
   "scripts": {
-    "build": "go build -o bin/codex-auth ./cmd/codex-auth",
-    "test": "go test ./... && node --test npm/*.test.js",
+    "build": "make build",
+    "test": "make test",
     "test:package": "node --test npm/*.test.js",
     "generate:homebrew-formula": "node npm/homebrew-formula.js",
     "stage:npm-binaries": "node npm/stage-platform-binaries.js",
-    "ci": "npm run test && go build -o bin/codex-auth ./cmd/codex-auth"
+    "ci": "make check"
   },
   "optionalDependencies": {
     "@shayyz-code/codex-auth-darwin-amd64": "0.1.4",

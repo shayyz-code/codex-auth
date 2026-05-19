@@ -44,14 +44,16 @@ jobs:
           cache: true
 
       - name: Test
-        run: go test ./...
+        run: make test-go
 
       - name: Build
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: "0"
-        run: go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" -o "dist/${{ matrix.artifact }}" ./cmd/codex-auth
+          VERSION: ${{ github.ref_name }}
+          OUT: dist/${{ matrix.artifact }}
+        run: make release-build
 
       - name: Generate checksum
         run: shasum -a 256 "dist/${{ matrix.artifact }}" > "dist/${{ matrix.artifact }}.sha256"
