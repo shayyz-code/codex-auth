@@ -148,6 +148,73 @@ func TestCurrentAuthSavedAccountMatchesByContent(t *testing.T) {
 	}
 }
 
+func TestSyncCurrentAccountMatchesLiveAuthToSavedAccount(t *testing.T) {
+	paths := NewPaths(t.TempDir())
+	service := NewService(paths)
+
+	if err := os.MkdirAll(paths.AccountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(paths.AccountsDir, "personal.json"), []byte(`{"token":"personal"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(paths.AccountsDir, "work.json"), []byte(`{"token":"work"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(paths.CurrentNamePath, []byte("personal\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	writeAuth(t, paths, `{"token":"work"}`)
+
+	name, ok, err := service.SyncCurrentAccount()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok || name != "work" {
+		t.Fatalf("synced current = %q, %v; want work, true", name, ok)
+	}
+
+	current, ok, err := service.CurrentAccountName()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok || current != "work" {
+		t.Fatalf("current = %q, %v; want work, true", current, ok)
+	}
+}
+
+func TestSyncCurrentAccountClearsStaleCurrentWhenLiveAuthIsUnsaved(t *testing.T) {
+	paths := NewPaths(t.TempDir())
+	service := NewService(paths)
+
+	if err := os.MkdirAll(paths.AccountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(paths.AccountsDir, "work.json"), []byte(`{"token":"work"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(paths.CurrentNamePath, []byte("work\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	writeAuth(t, paths, `{"token":"unsaved"}`)
+
+	name, ok, err := service.SyncCurrentAccount()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok || name != "" {
+		t.Fatalf("synced current = %q, %v; want empty, false", name, ok)
+	}
+
+	current, ok, err := service.CurrentAccountName()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok || current != "" {
+		t.Fatalf("current = %q, %v; want empty, false", current, ok)
+	}
+}
+
 func TestCurrentAccountNameInfersSymlinkTarget(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("symlink inference is not used on Windows")

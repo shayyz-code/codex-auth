@@ -201,6 +201,23 @@ func (s *Service) CurrentAuthSavedAccount() (string, bool, error) {
 	return s.accountNameForAuthContents(authContents, "")
 }
 
+func (s *Service) SyncCurrentAccount() (string, bool, error) {
+	name, ok, err := s.CurrentAuthSavedAccount()
+	if err != nil {
+		return "", false, err
+	}
+	if !ok {
+		if err := os.Remove(s.paths.CurrentNamePath); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return "", false, err
+		}
+		return "", false, nil
+	}
+	if err := writeFileAtomic(s.paths.CurrentNamePath, []byte(name+"\n"), 0o600); err != nil {
+		return "", false, err
+	}
+	return name, true, nil
+}
+
 func NormalizeAccountName(rawName string) (string, error) {
 	trimmed := strings.TrimSpace(rawName)
 	if trimmed == "" {

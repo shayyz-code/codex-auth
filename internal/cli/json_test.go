@@ -42,8 +42,8 @@ func TestExecuteWithJSON(t *testing.T) {
 	if !reflect.DeepEqual(listRes["accounts"], expectedAccounts) {
 		t.Fatalf("list --json accounts = %v, want %v", listRes["accounts"], expectedAccounts)
 	}
-	if listRes["current"] != nil { // Not active yet
-		t.Fatalf("list --json current = %v, want nil", listRes["current"])
+	if listRes["current"] != "work" {
+		t.Fatalf("list --json current = %v, want %q", listRes["current"], "work")
 	}
 
 	// Test use --json

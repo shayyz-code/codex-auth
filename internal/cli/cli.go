@@ -19,6 +19,7 @@ type service interface {
 	CurrentAccountName() (string, bool, error)
 	AuthFileExists() (bool, error)
 	CurrentAuthSavedAccount() (string, bool, error)
+	SyncCurrentAccount() (string, bool, error)
 	SaveAccount(string) (string, error)
 	UseAccount(string) (string, error)
 }
@@ -57,7 +58,14 @@ func NewRootCommand(version string, newService serviceFactory) *cobra.Command {
 	root.PersistentFlags().StringVar(&colorMode, "color", "auto", "Color output: auto, always, or never")
 
 	serviceForCommand := func() (service, error) {
-		return newService(codexHome)
+		accountsService, err := newService(codexHome)
+		if err != nil {
+			return nil, err
+		}
+		if _, _, err := accountsService.SyncCurrentAccount(); err != nil {
+			return nil, err
+		}
+		return accountsService, nil
 	}
 
 	root.AddCommand(newSaveCommand(serviceForCommand, &jsonOutput, &colorMode))

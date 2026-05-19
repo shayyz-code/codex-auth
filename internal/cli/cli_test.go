@@ -27,7 +27,7 @@ func TestExecuteRunsAccountWorkflowWithCodexHomeFlag(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("list exit code = %d, stderr = %q", code, stderr)
 	}
-	if strings.TrimSpace(stdout) != "work" {
+	if strings.TrimSpace(stdout) != "* work" {
 		t.Fatalf("list stdout = %q", stdout)
 	}
 
@@ -84,6 +84,42 @@ func TestExecuteCanForceColorizedListOutput(t *testing.T) {
 	}
 	if !strings.Contains(stdout, "\x1b[") || !strings.Contains(stdout, "Saved Codex accounts") {
 		t.Fatalf("colorized list stdout = %q", stdout)
+	}
+}
+
+func TestExecuteListSyncsCurrentFromLiveAuth(t *testing.T) {
+	codexHome := t.TempDir()
+	accountsDir := filepath.Join(codexHome, "accounts")
+	if err := os.MkdirAll(accountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(accountsDir, "personal.json"), []byte(`{"token":"personal"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(accountsDir, "work.json"), []byte(`{"token":"work"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(codexHome, "current"), []byte("personal\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(codexHome, "auth.json"), []byte(`{"token":"work"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, code := runCLI(t, nil, "--codex-home", codexHome, "list")
+	if code != 0 {
+		t.Fatalf("list exit code = %d, stderr = %q", code, stderr)
+	}
+	if !strings.Contains(stdout, "  personal\n* work\n") {
+		t.Fatalf("list stdout = %q", stdout)
+	}
+
+	current, err := os.ReadFile(filepath.Join(codexHome, "current"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(current) != "work\n" {
+		t.Fatalf("current file = %q, want work", current)
 	}
 }
 
