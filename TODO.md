@@ -13,7 +13,7 @@
 - [x] Add a tested npm launcher that resolves per-platform binary packages.
 - [x] Add tested npm package manifests for each supported platform binary.
 - [x] Add release workflow validation that stages binaries into npm packages and dry-runs package creation.
-- [ ] Replace single-binary npm packaging with per-platform packages before publishing npm broadly.
+- [x] Replace single-binary npm packaging with per-platform packages before publishing npm broadly.
 
 ## Go Migration
 
@@ -26,7 +26,7 @@
 
 ## Distribution
 
-- [ ] Publish npm package from GitHub Actions after platform binary packaging is added.
+- [x] Publish npm package from GitHub Actions after platform binary packaging is added.
 - [x] Publish GitHub Release artifacts on version tags.
 - [ ] Add Homebrew tap once the Go binary release is stable.
 - [ ] Evaluate Scoop, Winget, Arch AUR, and Docker distribution after the binary interface stabilizes.

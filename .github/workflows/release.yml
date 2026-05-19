@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   binaries:
@@ -72,7 +73,7 @@ jobs:
             dist/${{ matrix.artifact }}.sha256
           fail_on_unmatched_files: true
   package-manager-plan:
-    name: Package manager release plan
+    name: NPM package release
     needs: binaries
     runs-on: ubuntu-latest
     steps:
@@ -100,3 +101,18 @@ jobs:
           for package_dir in npm/packages/*; do
             npm pack --dry-run "$package_dir"
           done
+
+      - name: Publish npm platform packages
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          for package_dir in npm/packages/*; do
+            npm publish "$package_dir" --access public --provenance
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish root npm package
+        if: startsWith(github.ref, 'refs/tags/')
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

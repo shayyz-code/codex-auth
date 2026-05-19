@@ -25,6 +25,7 @@ func TestReleaseWorkflowBuildsAuditableTagArtifacts(t *testing.T) {
 	assertContains(t, workflow, "workflow_dispatch:", "manual release dry-run trigger")
 	assertContains(t, workflow, "permissions:", "workflow permissions")
 	assertContains(t, workflow, "contents: write", "release publishing permission")
+	assertContains(t, workflow, "id-token: write", "npm provenance permission")
 	assertContains(t, workflow, "run: go test ./...", "pre-release test step")
 	assertContains(t, workflow, "GOOS: ${{ matrix.goos }}", "cross-platform GOOS matrix")
 	assertContains(t, workflow, "GOARCH: ${{ matrix.goarch }}", "cross-platform GOARCH matrix")
@@ -40,6 +41,10 @@ func TestReleaseWorkflowBuildsAuditableTagArtifacts(t *testing.T) {
 	assertContains(t, workflow, "merge-multiple: true", "downloaded binaries are staged together")
 	assertContains(t, workflow, "npm run stage:npm-binaries", "npm binary staging")
 	assertContains(t, workflow, "npm pack --dry-run", "npm package dry run")
+	assertContainsCount(t, workflow, "if: startsWith(github.ref, 'refs/tags/')", 3, "tag-only publishing gates")
+	assertContains(t, workflow, "npm publish \"$package_dir\" --access public --provenance", "platform npm package publishing")
+	assertContains(t, workflow, "run: npm publish --access public --provenance", "root npm package publishing")
+	assertContains(t, workflow, "NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}", "npm publish token")
 }
 
 func readWorkflow(t *testing.T, name string) string {
@@ -58,5 +63,13 @@ func assertContains(t *testing.T, contents string, expected string, context stri
 
 	if !strings.Contains(contents, expected) {
 		t.Fatalf("%s missing %q", context, expected)
+	}
+}
+
+func assertContainsCount(t *testing.T, contents string, expected string, count int, context string) {
+	t.Helper()
+
+	if actual := strings.Count(contents, expected); actual != count {
+		t.Fatalf("%s has %d occurrences of %q, want %d", context, actual, expected, count)
 	}
 }
