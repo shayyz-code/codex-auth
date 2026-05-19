@@ -20,7 +20,8 @@ func TestREADMEDocumentsReleaseSecrets(t *testing.T) {
 func TestREADMEDocumentsBadgesAndInstallation(t *testing.T) {
 	readme := readREADME(t)
 
-	assertContains(t, readme, "actions/workflows/ci.yml/badge.svg")
+	assertContains(t, readme, "actions/workflows/ci.yml")
+	assertContains(t, readme, "img.shields.io/github/actions/workflow/status/shayyz-code/codex-su/ci.yml")
 	assertContains(t, readme, "img.shields.io/github/v/release/shayyz-code/codex-su")
 	assertContains(t, readme, "img.shields.io/npm/v/codex-su")
 	assertContains(t, readme, "img.shields.io/github/license/shayyz-code/codex-su")
