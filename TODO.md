@@ -9,6 +9,7 @@
 - [x] Add `--json` output for scripts and automation.
 - [x] Add `--codex-home <path>` flag support alongside the existing `CODEX_HOME` override.
 - [x] Add a migration note for existing users moving from `codex-auth` to `codex-su`.
+- [x] Add repository tests that assert CI and release workflows keep running the required checks.
 - [ ] Replace single-binary npm packaging with per-platform packages before publishing npm broadly.
 
 ## Go Migration

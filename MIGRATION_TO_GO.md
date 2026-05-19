@@ -33,7 +33,7 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 - Done: created `go.mod` with packages for commands, account storage, and filesystem operations.
 - Done: the current implementation uses the standard library only.
 - Done: account-service behavior is covered by Go tests.
-- Remaining: add CLI output tests and `--json` output before the next release.
+- Done: CLI output, command failures, `--json` output, and `--codex-home` behavior are covered by Go tests.
 
 3. Switch production binary
 
@@ -53,7 +53,7 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 - Command name: `codex-su`.
 - Versioning: semantic versioning with a `CHANGELOG.md` entry for every release.
 - Releases: created from tags only.
-- CI: typecheck/build/test on pull requests and main.
+- CI: build/test on pull requests and main, with repository tests covering the expected workflow checks.
 - CD: publish artifacts only after CI passes.
 - State override: support `CODEX_HOME` for tests, automation, and isolated production environments.
 
