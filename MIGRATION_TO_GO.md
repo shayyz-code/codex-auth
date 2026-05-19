@@ -40,7 +40,8 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 - Done: `codex-su` is the only production command.
 - Done: tagged releases build cross-platform binaries with SHA-256 checksums.
 - Remaining: publish signatures for every binary artifact.
-- Remaining: change npm package to ship the Go binary through platform-specific optional packages or a postinstall downloader.
+- In progress: the root npm package has a tested launcher for platform-specific optional binary packages.
+- Remaining: add and publish the platform-specific npm binary packages.
 
 4. Expand distribution
 
