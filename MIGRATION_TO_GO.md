@@ -42,10 +42,11 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 - Done: tagged releases sign every binary artifact with Sigstore keyless signing.
 - Done: npm packaging uses a root launcher with platform-specific optional binary packages.
 - Done: tagged release automation stages, validates, and publishes platform npm packages before publishing the root npm package.
+- Done: tagged release automation updates `shayyz-code/homebrew-tap` with a generated formula using `HOMEBREW_TAP_TOKEN`.
 
 4. Expand distribution
 
-- Use GoReleaser for GitHub Releases and Homebrew tap updates.
+- Use GitHub Actions for GitHub Releases, npm publishing, and Homebrew tap updates.
 - Add npm publishing for users who install CLIs through Node tooling.
 - Evaluate Scoop, Winget, Arch AUR, Docker, and direct shell installer after the binary interface is stable.
 
@@ -61,6 +62,6 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 ## Release Design
 
 - GitHub Release: source archive, binaries, checksums, and Sigstore signature bundles.
-- Homebrew: generated formula in a tap after Go binaries exist.
+- Homebrew: generated formula pushed to `shayyz-code/homebrew-tap` from tagged releases.
 - npm: package command remains `codex-su`; implementation can point to the Go binary once migrated.
 - Other package managers: add only after checksums, install tests, and rollback documentation exist.

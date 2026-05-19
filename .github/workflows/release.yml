@@ -125,3 +125,42 @@ jobs:
         run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  homebrew:
+    name: Homebrew tap release
+    needs: binaries
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: shayyz-code/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Download release binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: source/dist
+          merge-multiple: true
+
+      - name: Generate formula
+        working-directory: source
+        run: |
+          mkdir -p ../tap/Formula
+          npm run generate:homebrew-formula -- "${GITHUB_REF_NAME}" dist > ../tap/Formula/codex-su.rb
+
+      - name: Commit formula to tap
+        working-directory: tap
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/codex-su.rb
+          git commit -m "Update codex-su ${GITHUB_REF_NAME}" || exit 0
+          git push

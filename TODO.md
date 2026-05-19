@@ -22,11 +22,12 @@
 - [x] Preserve command compatibility for `save`, `use`, `list`, and `current`.
 - [x] Produce cross-platform release binaries with checksums.
 - [x] Sign release binaries.
-- [ ] Add Homebrew formula release automation after Go binaries exist.
+- [x] Add Homebrew formula release automation after Go binaries exist.
 
 ## Distribution
 
 - [x] Publish npm package from GitHub Actions after platform binary packaging is added.
 - [x] Publish GitHub Release artifacts on version tags.
-- [ ] Add Homebrew tap once the Go binary release is stable.
+- [x] Add Homebrew tap once the Go binary release is stable.
+- [ ] Configure the `HOMEBREW_TAP_TOKEN` GitHub Actions secret for `shayyz-code/homebrew-tap`.
 - [ ] Evaluate Scoop, Winget, Arch AUR, and Docker distribution after the binary interface stabilizes.

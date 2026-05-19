@@ -11,6 +11,7 @@
     "build": "go build -o bin/codex-su ./cmd/codex-su",
     "test": "go test ./... && node --test npm/*.test.js",
     "test:package": "node --test npm/*.test.js",
+    "generate:homebrew-formula": "node npm/homebrew-formula.js",
     "stage:npm-binaries": "node npm/stage-platform-binaries.js",
     "ci": "npm run test && go build -o bin/codex-su ./cmd/codex-su"
   },

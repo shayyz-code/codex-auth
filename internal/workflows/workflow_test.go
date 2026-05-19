@@ -44,10 +44,16 @@ func TestReleaseWorkflowBuildsAuditableTagArtifacts(t *testing.T) {
 	assertContains(t, workflow, "merge-multiple: true", "downloaded binaries are staged together")
 	assertContains(t, workflow, "npm run stage:npm-binaries", "npm binary staging")
 	assertContains(t, workflow, "npm pack --dry-run", "npm package dry run")
-	assertContainsCount(t, workflow, "if: startsWith(github.ref, 'refs/tags/')", 5, "tag-only signing and publishing gates")
+	assertContainsCount(t, workflow, "if: startsWith(github.ref, 'refs/tags/')", 6, "tag-only signing and publishing gates")
 	assertContains(t, workflow, "npm publish \"$package_dir\" --access public --provenance", "platform npm package publishing")
 	assertContains(t, workflow, "run: npm publish --access public --provenance", "root npm package publishing")
 	assertContains(t, workflow, "NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}", "npm publish token")
+	assertContains(t, workflow, "name: Homebrew tap release", "Homebrew release job")
+	assertContains(t, workflow, "repository: shayyz-code/homebrew-tap", "Homebrew tap repository")
+	assertContains(t, workflow, "token: ${{ secrets.HOMEBREW_TAP_TOKEN }}", "Homebrew tap token")
+	assertContains(t, workflow, "npm run generate:homebrew-formula", "Homebrew formula generation")
+	assertContains(t, workflow, "Formula/codex-su.rb", "Homebrew formula path")
+	assertContains(t, workflow, "git push", "Homebrew tap push")
 }
 
 func readWorkflow(t *testing.T, name string) string {
