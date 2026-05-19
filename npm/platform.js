@@ -1,11 +1,36 @@
 "use strict";
 
 const platformPackages = [
-  { platform: "darwin", arch: "arm64", packageName: "codex-su-darwin-arm64" },
-  { platform: "darwin", arch: "x64", packageName: "codex-su-darwin-amd64" },
-  { platform: "linux", arch: "arm64", packageName: "codex-su-linux-arm64" },
-  { platform: "linux", arch: "x64", packageName: "codex-su-linux-amd64" },
-  { platform: "win32", arch: "x64", packageName: "codex-su-windows-amd64" }
+  {
+    platform: "darwin",
+    arch: "arm64",
+    packageName: "codex-su-darwin-arm64",
+    artifactName: "codex-su-darwin-arm64"
+  },
+  {
+    platform: "darwin",
+    arch: "x64",
+    packageName: "codex-su-darwin-amd64",
+    artifactName: "codex-su-darwin-amd64"
+  },
+  {
+    platform: "linux",
+    arch: "arm64",
+    packageName: "codex-su-linux-arm64",
+    artifactName: "codex-su-linux-arm64"
+  },
+  {
+    platform: "linux",
+    arch: "x64",
+    packageName: "codex-su-linux-amd64",
+    artifactName: "codex-su-linux-amd64"
+  },
+  {
+    platform: "win32",
+    arch: "x64",
+    packageName: "codex-su-windows-amd64",
+    artifactName: "codex-su-windows-amd64.exe"
+  }
 ];
 
 function supportedPackageNames() {

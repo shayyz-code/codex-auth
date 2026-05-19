@@ -34,6 +34,12 @@ func TestReleaseWorkflowBuildsAuditableTagArtifacts(t *testing.T) {
 	assertContains(t, workflow, "actions/upload-artifact@v4", "artifact upload")
 	assertContains(t, workflow, "if: startsWith(github.ref, 'refs/tags/')", "tag-only release publishing")
 	assertContains(t, workflow, "softprops/action-gh-release@v2", "GitHub Release publishing")
+	assertContains(t, workflow, "needs: binaries", "npm package validation waits for binaries")
+	assertContains(t, workflow, "actions/setup-node@v4", "Node setup for npm package validation")
+	assertContains(t, workflow, "actions/download-artifact@v4", "release binary download")
+	assertContains(t, workflow, "merge-multiple: true", "downloaded binaries are staged together")
+	assertContains(t, workflow, "npm run stage:npm-binaries", "npm binary staging")
+	assertContains(t, workflow, "npm pack --dry-run", "npm package dry run")
 }
 
 func readWorkflow(t *testing.T, name string) string {

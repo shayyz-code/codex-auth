@@ -12,6 +12,7 @@
 - [x] Add repository tests that assert CI and release workflows keep running the required checks.
 - [x] Add a tested npm launcher that resolves per-platform binary packages.
 - [x] Add tested npm package manifests for each supported platform binary.
+- [x] Add release workflow validation that stages binaries into npm packages and dry-runs package creation.
 - [ ] Replace single-binary npm packaging with per-platform packages before publishing npm broadly.
 
 ## Go Migration

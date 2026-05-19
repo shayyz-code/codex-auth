@@ -73,11 +73,30 @@ jobs:
           fail_on_unmatched_files: true
   package-manager-plan:
     name: Package manager release plan
+    needs: binaries
     runs-on: ubuntu-latest
     steps:
-      - name: Release channels
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Download release binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Stage npm platform binaries
+        run: npm run stage:npm-binaries
+
+      - name: Validate npm packages
         run: |
-          echo "GitHub binary releases are active for tags."
-          echo "Homebrew, npm, Scoop, Winget, and AUR should be enabled after their package metadata is added and tested."
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          npm pack --dry-run
+          for package_dir in npm/packages/*; do
+            npm pack --dry-run "$package_dir"
+          done
