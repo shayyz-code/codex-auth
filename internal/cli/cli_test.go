@@ -28,7 +28,7 @@ func TestExecuteRunsAccountWorkflowWithCodexHomeFlag(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("list exit code = %d, stderr = %q", code, stderr)
 	}
-	if strings.TrimSpace(stdout) != "* work" {
+	if !strings.Contains(stdout, "| *      | work | -     |") {
 		t.Fatalf("list stdout = %q", stdout)
 	}
 
@@ -151,6 +151,28 @@ func TestExecuteCanForceColorizedListOutput(t *testing.T) {
 	}
 }
 
+func TestExecuteListRendersAccountTable(t *testing.T) {
+	codexHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(codexHome, "accounts"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	auth := `{"tokens":{"id_token":"` + testJWT(`{"email":"work@example.com"}`) + `"}}`
+	if err := os.WriteFile(filepath.Join(codexHome, "accounts", "work.json"), []byte(auth), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, code := runCLI(t, nil, "--codex-home", codexHome, "list")
+	if code != 0 {
+		t.Fatalf("list exit code = %d, stderr = %q", code, stderr)
+	}
+	if !strings.Contains(stdout, "| Active | Name | Email            |") {
+		t.Fatalf("list stdout missing header: %q", stdout)
+	}
+	if !strings.Contains(stdout, "|        | work | work@example.com |") {
+		t.Fatalf("list stdout missing row: %q", stdout)
+	}
+}
+
 func TestExecuteListSyncsCurrentFromLiveAuth(t *testing.T) {
 	codexHome := t.TempDir()
 	accountsDir := filepath.Join(codexHome, "accounts")
@@ -174,7 +196,7 @@ func TestExecuteListSyncsCurrentFromLiveAuth(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("list exit code = %d, stderr = %q", code, stderr)
 	}
-	if !strings.Contains(stdout, "  personal\n* work\n") {
+	if !strings.Contains(stdout, "|        | personal | -     |") || !strings.Contains(stdout, "| *      | work     | -     |") {
 		t.Fatalf("list stdout = %q", stdout)
 	}
 
@@ -256,6 +278,20 @@ func TestExecuteReportsCommandFailures(t *testing.T) {
 	}
 	if !strings.Contains(stderr, `unknown command "missing"`) {
 		t.Fatalf("stderr = %q", stderr)
+	}
+}
+
+func TestParseMenuKey(t *testing.T) {
+	cases := map[string][]byte{
+		"up":     []byte{27, '[', 'A'},
+		"down":   []byte{27, '[', 'B'},
+		"enter":  []byte{'\n'},
+		"cancel": []byte{27},
+	}
+	for want, input := range cases {
+		if got := parseMenuKey(input); got != want {
+			t.Fatalf("parseMenuKey(%v) = %q, want %q", input, got, want)
+		}
 	}
 }
 

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -260,20 +262,7 @@ func newListCommand(serviceForCommand func() (service, error), jsonOutput *bool,
 			}
 
 			style := newStyle(cmd.OutOrStdout(), *colorMode)
-			if style.enabled {
-				fmt.Fprintln(cmd.OutOrStdout(), style.title("Saved Codex accounts"))
-			}
-			for _, info := range infos {
-				mark := " "
-				if ok && current == info.Name {
-					mark = "*"
-				}
-				if style.enabled {
-					fmt.Fprintf(cmd.OutOrStdout(), "%s %s\n", style.marker(mark, mark == "*"), style.account(formatAccountInfo(info), ok && current == info.Name))
-				} else {
-					fmt.Fprintf(cmd.OutOrStdout(), "%s %s\n", mark, formatAccountInfo(info))
-				}
-			}
+			printAccountsTable(cmd.OutOrStdout(), infos, current, ok, style)
 			return nil
 		},
 	}
@@ -368,6 +357,43 @@ func nullableString(value string) any {
 		return nil
 	}
 	return value
+}
+
+func printAccountsTable(stdout io.Writer, infos []accounts.AccountInfo, current string, hasCurrent bool, style cliStyle) {
+	nameWidth := len("Name")
+	emailWidth := len("Email")
+	for _, info := range infos {
+		if len(info.Name) > nameWidth {
+			nameWidth = len(info.Name)
+		}
+		if len(displayEmail(info.Email)) > emailWidth {
+			emailWidth = len(displayEmail(info.Email))
+		}
+	}
+
+	if style.enabled {
+		fmt.Fprintln(stdout, style.title("Saved Codex accounts"))
+	}
+	border := "+" + strings.Repeat("-", len("Active")+2) + "+" + strings.Repeat("-", nameWidth+2) + "+" + strings.Repeat("-", emailWidth+2) + "+"
+	fmt.Fprintln(stdout, border)
+	fmt.Fprintf(stdout, "| %-6s | %-*s | %-*s |\n", "Active", nameWidth, "Name", emailWidth, "Email")
+	fmt.Fprintln(stdout, border)
+	for _, info := range infos {
+		active := ""
+		isActive := hasCurrent && current == info.Name
+		if isActive {
+			active = "*"
+		}
+		fmt.Fprintf(stdout, "| %-6s | %-*s | %-*s |\n", active, nameWidth, info.Name, emailWidth, displayEmail(info.Email))
+	}
+	fmt.Fprintln(stdout, border)
+}
+
+func displayEmail(email string) string {
+	if email == "" {
+		return "-"
+	}
+	return email
 }
 
 type cliStyle struct {
@@ -614,6 +640,14 @@ func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service
 		return "", err
 	}
 
+	if stdinFile, stdinOK := stdin.(*os.File); stdinOK {
+		if stdoutFile, stdoutOK := stdout.(*os.File); stdoutOK && isTerminal(stdinFile) && isTerminal(stdoutFile) {
+			if name, err := promptForAccountMenu(stdinFile, stdoutFile, infos, current, ok, colorMode); err == nil {
+				return name, nil
+			}
+		}
+	}
+
 	style := newStyle(stdout, colorMode)
 	if style.enabled {
 		fmt.Fprintln(stdout, style.title("Codex accounts"))
@@ -656,6 +690,162 @@ func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service
 		}
 	}
 	return "", errors.New("No account selected. The operation was cancelled.")
+}
+
+func promptForAccountMenu(stdin *os.File, stdout *os.File, infos []accounts.AccountInfo, current string, hasCurrent bool, colorMode string) (string, error) {
+	restore, err := enableRawMode(stdin)
+	if err != nil {
+		return "", err
+	}
+	defer restore()
+
+	style := newStyle(stdout, colorMode)
+	selected := 0
+	for i, info := range infos {
+		if hasCurrent && info.Name == current {
+			selected = i
+			break
+		}
+	}
+
+	fmt.Fprint(stdout, "\x1b[?25l")
+	defer fmt.Fprint(stdout, "\x1b[?25h")
+
+	lines := 0
+	render := func() {
+		if lines > 0 {
+			fmt.Fprintf(stdout, "\x1b[%dA\x1b[J", lines)
+		}
+		lines = renderAccountMenu(stdout, infos, selected, current, hasCurrent, style)
+	}
+	render()
+
+	buffer := make([]byte, 8)
+	for {
+		n, err := stdin.Read(buffer)
+		if err != nil {
+			return "", err
+		}
+		key := parseMenuKey(buffer[:n])
+		switch key {
+		case "up":
+			if selected == 0 {
+				selected = len(infos) - 1
+			} else {
+				selected--
+			}
+			render()
+		case "down":
+			selected = (selected + 1) % len(infos)
+			render()
+		case "enter":
+			fmt.Fprint(stdout, "\n")
+			return infos[selected].Name, nil
+		case "cancel":
+			fmt.Fprint(stdout, "\n")
+			return "", errors.New("No account selected. The operation was cancelled.")
+		}
+	}
+}
+
+func renderAccountMenu(stdout io.Writer, infos []accounts.AccountInfo, selected int, current string, hasCurrent bool, style cliStyle) int {
+	lineCount := 0
+	title := "Select Codex account"
+	if style.enabled {
+		title = style.title(title)
+	}
+	fmt.Fprintln(stdout, title)
+	lineCount++
+	hint := "Use ↑/↓ or j/k, Enter to confirm, Esc to cancel."
+	if style.enabled {
+		hint = style.hint(hint)
+	}
+	fmt.Fprintln(stdout, hint)
+	lineCount++
+
+	nameWidth := len("Name")
+	emailWidth := len("Email")
+	for _, info := range infos {
+		if len(info.Name) > nameWidth {
+			nameWidth = len(info.Name)
+		}
+		if len(displayEmail(info.Email)) > emailWidth {
+			emailWidth = len(displayEmail(info.Email))
+		}
+	}
+	border := "+" + strings.Repeat("-", 4) + "+" + strings.Repeat("-", len("Active")+2) + "+" + strings.Repeat("-", nameWidth+2) + "+" + strings.Repeat("-", emailWidth+2) + "+"
+	fmt.Fprintln(stdout, border)
+	fmt.Fprintf(stdout, "| %-2s | %-6s | %-*s | %-*s |\n", "", "Active", nameWidth, "Name", emailWidth, "Email")
+	fmt.Fprintln(stdout, border)
+	lineCount += 3
+	for i, info := range infos {
+		cursor := " "
+		if i == selected {
+			cursor = ">"
+		}
+		active := ""
+		isActive := hasCurrent && current == info.Name
+		if isActive {
+			active = "*"
+		}
+		fmt.Fprintf(stdout, "| %-2s | %-6s | %-*s | %-*s |\n", cursor, active, nameWidth, info.Name, emailWidth, displayEmail(info.Email))
+		lineCount++
+	}
+	fmt.Fprintln(stdout, border)
+	lineCount++
+	return lineCount
+}
+
+func parseMenuKey(input []byte) string {
+	if len(input) == 0 {
+		return ""
+	}
+	switch input[0] {
+	case '\r', '\n':
+		return "enter"
+	case 3, 27:
+		if len(input) >= 3 && input[0] == 27 && input[1] == '[' {
+			switch input[2] {
+			case 'A':
+				return "up"
+			case 'B':
+				return "down"
+			}
+		}
+		return "cancel"
+	case 'k', 'K':
+		return "up"
+	case 'j', 'J':
+		return "down"
+	}
+	return ""
+}
+
+func enableRawMode(stdin *os.File) (func(), error) {
+	if runtime.GOOS == "windows" {
+		return func() {}, errors.New("raw terminal mode is not available")
+	}
+	getState := exec.Command("stty", "-g")
+	getState.Stdin = stdin
+	state, err := getState.Output()
+	if err != nil {
+		return func() {}, err
+	}
+	raw := exec.Command("stty", "raw", "-echo")
+	raw.Stdin = stdin
+	if err := raw.Run(); err != nil {
+		return func() {}, err
+	}
+	return func() {
+		restore := exec.Command("stty", strings.TrimSpace(string(state)))
+		restore.Stdin = stdin
+		_ = restore.Run()
+	}, nil
+}
+
+func isTerminal(file *os.File) bool {
+	stat, err := file.Stat()
+	return err == nil && stat.Mode()&os.ModeCharDevice != 0
 }
 
 func promptReader(stdin io.Reader) *bufio.Reader {
