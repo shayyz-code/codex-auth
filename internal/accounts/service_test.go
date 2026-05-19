@@ -88,7 +88,7 @@ func TestUseAccountActivatesSavedAccountAndRecordsCurrent(t *testing.T) {
 	}
 }
 
-func TestSaveAccountDoesNotDuplicateExistingAuthSnapshot(t *testing.T) {
+func TestSaveAccountHonorsRequestedNameEvenWhenAuthMatchesExistingSnapshot(t *testing.T) {
 	paths := NewPaths(t.TempDir())
 	service := NewService(paths)
 
@@ -105,15 +105,15 @@ func TestSaveAccountDoesNotDuplicateExistingAuthSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if name != "work" {
-		t.Fatalf("duplicate save name = %q, want existing work", name)
+	if name != "duplicate" {
+		t.Fatalf("duplicate save name = %q, want duplicate", name)
 	}
 
 	names, err := service.ListAccountNames()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := join(names), "work"; got != want {
+	if got, want := join(names), "duplicate,work"; got != want {
 		t.Fatalf("names = %q, want %q", got, want)
 	}
 }

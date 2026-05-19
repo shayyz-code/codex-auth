@@ -69,6 +69,24 @@ func TestExecuteUsePromptsForAccount(t *testing.T) {
 	}
 }
 
+func TestExecuteCanForceColorizedListOutput(t *testing.T) {
+	codexHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(codexHome, "accounts"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(codexHome, "accounts", "work.json"), []byte(`{"token":"work"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, code := runCLI(t, nil, "--codex-home", codexHome, "--color", "always", "list")
+	if code != 0 {
+		t.Fatalf("list exit code = %d, stderr = %q", code, stderr)
+	}
+	if !strings.Contains(stdout, "\x1b[") || !strings.Contains(stdout, "Saved Codex accounts") {
+		t.Fatalf("colorized list stdout = %q", stdout)
+	}
+}
+
 func TestExecuteUseSuggestsClosestAccountName(t *testing.T) {
 	codexHome := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(codexHome, "accounts"), 0o700); err != nil {

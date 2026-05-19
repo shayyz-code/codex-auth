@@ -137,15 +137,6 @@ func (s *Service) SaveAccount(rawName string) (string, error) {
 	if err := os.MkdirAll(s.paths.AccountsDir, 0o700); err != nil {
 		return "", err
 	}
-
-	existingName, ok, err := s.accountNameForAuthContents(authContents, name)
-	if err != nil {
-		return "", err
-	}
-	if ok {
-		return existingName, nil
-	}
-
 	if err := writeFileAtomic(s.accountFilePath(name), authContents, 0o600); err != nil {
 		return "", err
 	}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 
@@ -32,7 +33,8 @@ func Execute(version string, args []string, stdin io.Reader, stdout io.Writer, s
 	cmd.SetErr(stderr)
 
 	if err := cmd.Execute(); err != nil {
-		fmt.Fprintln(stderr, err)
+		style := newStyle(stderr, "auto")
+		fmt.Fprintln(stderr, style.error(err.Error()))
 		return 1
 	}
 	return 0
@@ -41,6 +43,7 @@ func Execute(version string, args []string, stdin io.Reader, stdout io.Writer, s
 func NewRootCommand(version string, newService serviceFactory) *cobra.Command {
 	var codexHome string
 	var jsonOutput bool
+	var colorMode string
 
 	root := &cobra.Command{
 		Use:           "codex-auth",
@@ -51,19 +54,20 @@ func NewRootCommand(version string, newService serviceFactory) *cobra.Command {
 	}
 	root.PersistentFlags().StringVar(&codexHome, "codex-home", "", "Codex config directory; defaults to CODEX_HOME or ~/.codex")
 	root.PersistentFlags().BoolVar(&jsonOutput, "json", false, "Output in JSON format")
+	root.PersistentFlags().StringVar(&colorMode, "color", "auto", "Color output: auto, always, or never")
 
 	serviceForCommand := func() (service, error) {
 		return newService(codexHome)
 	}
 
-	root.AddCommand(newSaveCommand(serviceForCommand, &jsonOutput))
-	root.AddCommand(newUseCommand(serviceForCommand, &jsonOutput))
-	root.AddCommand(newListCommand(serviceForCommand, &jsonOutput))
-	root.AddCommand(newCurrentCommand(serviceForCommand, &jsonOutput))
+	root.AddCommand(newSaveCommand(serviceForCommand, &jsonOutput, &colorMode))
+	root.AddCommand(newUseCommand(serviceForCommand, &jsonOutput, &colorMode))
+	root.AddCommand(newListCommand(serviceForCommand, &jsonOutput, &colorMode))
+	root.AddCommand(newCurrentCommand(serviceForCommand, &jsonOutput, &colorMode))
 	return root
 }
 
-func newSaveCommand(serviceForCommand func() (service, error), jsonOutput *bool) *cobra.Command {
+func newSaveCommand(serviceForCommand func() (service, error), jsonOutput *bool, colorMode *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "save <name>",
 		Short: "Save the current Codex auth file as a named account",
@@ -82,13 +86,14 @@ func newSaveCommand(serviceForCommand func() (service, error), jsonOutput *bool)
 				return printJSON(cmd.OutOrStdout(), map[string]string{"account": savedName})
 			}
 
-			fmt.Fprintf(cmd.OutOrStdout(), "Saved current Codex auth tokens as %q.\n", savedName)
+			style := newStyle(cmd.OutOrStdout(), *colorMode)
+			fmt.Fprintf(cmd.OutOrStdout(), "%s\n", style.successf("Saved current Codex auth tokens as %q.", savedName))
 			return nil
 		},
 	}
 }
 
-func newUseCommand(serviceForCommand func() (service, error), jsonOutput *bool) *cobra.Command {
+func newUseCommand(serviceForCommand func() (service, error), jsonOutput *bool, colorMode *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "use [name]",
 		Short: "Switch Codex auth to a saved account",
@@ -107,7 +112,7 @@ func newUseCommand(serviceForCommand func() (service, error), jsonOutput *bool) 
 				if *jsonOutput {
 					return errors.New("The [name] argument is required when using --json.")
 				}
-				picked, err := promptForAccount(input, cmd.OutOrStdout(), accountsService)
+				picked, err := promptForAccount(input, cmd.OutOrStdout(), accountsService, *colorMode)
 				if err != nil {
 					return err
 				}
@@ -118,7 +123,7 @@ func newUseCommand(serviceForCommand func() (service, error), jsonOutput *bool) 
 				return err
 			}
 			if !*jsonOutput {
-				if err := promptToSaveUnsavedAuth(input, cmd.OutOrStdout(), accountsService); err != nil {
+				if err := promptToSaveUnsavedAuth(input, cmd.OutOrStdout(), accountsService, *colorMode); err != nil {
 					return err
 				}
 			}
@@ -132,13 +137,14 @@ func newUseCommand(serviceForCommand func() (service, error), jsonOutput *bool) 
 				return printJSON(cmd.OutOrStdout(), map[string]string{"account": activated})
 			}
 
-			fmt.Fprintf(cmd.OutOrStdout(), "Switched Codex auth to %q.\n", activated)
+			style := newStyle(cmd.OutOrStdout(), *colorMode)
+			fmt.Fprintf(cmd.OutOrStdout(), "%s\n", style.successf("Switched Codex auth to %q.", activated))
 			return nil
 		},
 	}
 }
 
-func newListCommand(serviceForCommand func() (service, error), jsonOutput *bool) *cobra.Command {
+func newListCommand(serviceForCommand func() (service, error), jsonOutput *bool, colorMode *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "List saved Codex accounts",
@@ -170,23 +176,32 @@ func newListCommand(serviceForCommand func() (service, error), jsonOutput *bool)
 			}
 
 			if len(names) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "No saved Codex accounts yet. Run `codex-auth save <name>`.")
+				style := newStyle(cmd.OutOrStdout(), *colorMode)
+				fmt.Fprintln(cmd.OutOrStdout(), style.warning("No saved Codex accounts yet. Run `codex-auth save <name>`."))
 				return nil
 			}
 
+			style := newStyle(cmd.OutOrStdout(), *colorMode)
+			if style.enabled {
+				fmt.Fprintln(cmd.OutOrStdout(), style.title("Saved Codex accounts"))
+			}
 			for _, name := range names {
 				mark := " "
 				if ok && current == name {
 					mark = "*"
 				}
-				fmt.Fprintf(cmd.OutOrStdout(), "%s %s\n", mark, name)
+				if style.enabled {
+					fmt.Fprintf(cmd.OutOrStdout(), "%s %s\n", style.marker(mark, mark == "*"), style.account(name, ok && current == name))
+				} else {
+					fmt.Fprintf(cmd.OutOrStdout(), "%s %s\n", mark, name)
+				}
 			}
 			return nil
 		},
 	}
 }
 
-func newCurrentCommand(serviceForCommand func() (service, error), jsonOutput *bool) *cobra.Command {
+func newCurrentCommand(serviceForCommand func() (service, error), jsonOutput *bool, colorMode *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "current",
 		Short: "Show the active Codex account",
@@ -212,10 +227,16 @@ func newCurrentCommand(serviceForCommand func() (service, error), jsonOutput *bo
 			}
 
 			if !ok {
-				fmt.Fprintln(cmd.OutOrStdout(), "No Codex account is active yet.")
+				style := newStyle(cmd.OutOrStdout(), *colorMode)
+				fmt.Fprintln(cmd.OutOrStdout(), style.warning("No Codex account is active yet."))
 				return nil
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), name)
+			style := newStyle(cmd.OutOrStdout(), *colorMode)
+			if style.enabled {
+				fmt.Fprintln(cmd.OutOrStdout(), style.account(name, true))
+			} else {
+				fmt.Fprintln(cmd.OutOrStdout(), name)
+			}
 			return nil
 		},
 	}
@@ -225,6 +246,89 @@ func printJSON(w io.Writer, v any) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
+}
+
+type cliStyle struct {
+	enabled bool
+}
+
+func newStyle(w io.Writer, colorMode string) cliStyle {
+	switch strings.ToLower(strings.TrimSpace(colorMode)) {
+	case "always":
+		return cliStyle{enabled: true}
+	case "never":
+		return cliStyle{}
+	}
+	file, ok := w.(*os.File)
+	if !ok {
+		return cliStyle{}
+	}
+	if os.Getenv("NO_COLOR") != "" || os.Getenv("TERM") == "dumb" {
+		return cliStyle{}
+	}
+	stat, err := file.Stat()
+	if err != nil || stat.Mode()&os.ModeCharDevice == 0 {
+		return cliStyle{}
+	}
+	return cliStyle{enabled: true}
+}
+
+func (s cliStyle) title(message string) string {
+	return s.color(message, "1", "36")
+}
+
+func (s cliStyle) account(name string, active bool) string {
+	if active {
+		return s.color(name, "1", "32")
+	}
+	return s.color(name, "37")
+}
+
+func (s cliStyle) marker(mark string, active bool) string {
+	if active {
+		return s.color(mark, "1", "32")
+	}
+	return s.color(mark, "90")
+}
+
+func (s cliStyle) successf(format string, args ...any) string {
+	return s.success(fmt.Sprintf(format, args...))
+}
+
+func (s cliStyle) success(message string) string {
+	if !s.enabled {
+		return message
+	}
+	return s.color("[OK]", "1", "32") + " " + message
+}
+
+func (s cliStyle) warning(message string) string {
+	if !s.enabled {
+		return message
+	}
+	return s.color("[!]", "1", "33") + " " + message
+}
+
+func (s cliStyle) error(message string) string {
+	if !s.enabled {
+		return message
+	}
+	return s.color("[ERR]", "1", "31") + " " + message
+}
+
+func (s cliStyle) prompt(message string) string {
+	return s.color(message, "1", "36")
+}
+
+func (s cliStyle) hint(message string) string {
+	return s.color(message, "90")
+}
+
+func (s cliStyle) color(message string, codes ...string) string {
+	if !s.enabled {
+		return message
+	}
+	return "\x1b[" + strings.Join(codes, ";") + "m" + message + "\x1b[0m"
 }
 
 func ensureSavedAccountExists(rawName string, accountsService service) error {
@@ -244,7 +348,7 @@ func ensureSavedAccountExists(rawName string, accountsService service) error {
 	return addAccountSuggestion(accounts.AccountNotFoundError{Name: name}, name, accountsService)
 }
 
-func promptToSaveUnsavedAuth(stdin io.Reader, stdout io.Writer, accountsService service) error {
+func promptToSaveUnsavedAuth(stdin io.Reader, stdout io.Writer, accountsService service, colorMode string) error {
 	hasAuth, err := accountsService.AuthFileExists()
 	if err != nil {
 		return err
@@ -257,18 +361,20 @@ func promptToSaveUnsavedAuth(stdin io.Reader, stdout io.Writer, accountsService 
 	}
 
 	reader := promptReader(stdin)
-	fmt.Fprint(stdout, "Current Codex auth is not saved as an account. Save it before switching? [y/N]: ")
+	style := newStyle(stdout, colorMode)
+	fmt.Fprintf(stdout, "%s ", style.warning("Current Codex auth is not saved as an account."))
+	fmt.Fprint(stdout, style.prompt("Save it before switching? [y/N]: "))
 	line, err := reader.ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
 		return err
 	}
 	answer := strings.ToLower(strings.TrimSpace(line))
 	if answer != "y" && answer != "yes" {
-		fmt.Fprintln(stdout, "Continuing without saving current Codex auth.")
+		fmt.Fprintln(stdout, style.hint("Continuing without saving current Codex auth."))
 		return nil
 	}
 
-	fmt.Fprint(stdout, "Account name: ")
+	fmt.Fprint(stdout, style.prompt("Account name: "))
 	line, err = reader.ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
 		return err
@@ -281,7 +387,7 @@ func promptToSaveUnsavedAuth(stdin io.Reader, stdout io.Writer, accountsService 
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(stdout, "Saved current Codex auth tokens as %q.\n", savedName)
+	fmt.Fprintf(stdout, "%s\n", style.successf("Saved current Codex auth tokens as %q.", savedName))
 	return nil
 }
 
@@ -372,7 +478,7 @@ func minInt(values ...int) int {
 	return minimum
 }
 
-func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service) (string, error) {
+func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service, colorMode string) (string, error) {
 	names, err := accountsService.ListAccountNames()
 	if err != nil {
 		return "", err
@@ -386,15 +492,24 @@ func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service
 		return "", err
 	}
 
-	fmt.Fprintln(stdout, "Select account:")
+	style := newStyle(stdout, colorMode)
+	if style.enabled {
+		fmt.Fprintln(stdout, style.title("Select account"))
+	} else {
+		fmt.Fprintln(stdout, "Select account:")
+	}
 	for i, name := range names {
 		label := name
 		if ok && current == name {
 			label += " (active)"
 		}
-		fmt.Fprintf(stdout, "  %d) %s\n", i+1, label)
+		if style.enabled {
+			fmt.Fprintf(stdout, "  %s) %s\n", style.color(strconv.Itoa(i+1), "36"), style.account(label, ok && current == name))
+		} else {
+			fmt.Fprintf(stdout, "  %d) %s\n", i+1, label)
+		}
 	}
-	fmt.Fprint(stdout, "Enter number: ")
+	fmt.Fprint(stdout, style.prompt("Enter number: "))
 
 	line, err := promptReader(stdin).ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
