@@ -57,6 +57,15 @@ Notes:
 - Release binaries are built for macOS, Linux, and Windows from tagged releases.
 - Set `CODEX_HOME` or pass `--codex-home <path>` to use a nonstandard Codex config directory for tests, automation, or isolated environments.
 
+## Release Setup
+
+Tagged releases publish GitHub binaries, npm packages, and the Homebrew tap formula. Configure these GitHub Actions secrets before creating a release tag:
+
+- `NPM_TOKEN` - npm automation token with publish access to `codex-su` and the platform binary packages.
+- `HOMEBREW_TAP_TOKEN` - GitHub token with write access to `shayyz-code/homebrew-tap`.
+
+Release tags must use the `v*.*.*` format, for example `v0.1.3`.
+
 ## Migrating from `codex-auth`
 
 If you are moving from the legacy `codex-auth` tool:
@@ -64,4 +73,3 @@ If you are moving from the legacy `codex-auth` tool:
 1.  **Compatible State**: `codex-su` uses the same directory structure (`~/.codex/accounts`) and file format as `codex-auth`. Your existing snapshots will be recognized automatically.
 2.  **Binary Name**: The command has been renamed to `codex-su` to follow the "switch user" convention.
 3.  **Removal**: You can safely uninstall the old tool after installing `codex-su`.
-

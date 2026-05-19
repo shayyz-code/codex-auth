@@ -29,5 +29,6 @@
 - [x] Publish npm package from GitHub Actions after platform binary packaging is added.
 - [x] Publish GitHub Release artifacts on version tags.
 - [x] Add Homebrew tap once the Go binary release is stable.
-- [ ] Configure the `HOMEBREW_TAP_TOKEN` GitHub Actions secret for `shayyz-code/homebrew-tap`.
+- [x] Document required `NPM_TOKEN` and `HOMEBREW_TAP_TOKEN` GitHub Actions secrets.
+- [ ] Configure the documented release secrets in GitHub Actions before tagging.
 - [ ] Evaluate Scoop, Winget, Arch AUR, and Docker distribution after the binary interface stabilizes.
