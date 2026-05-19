@@ -1,13 +1,13 @@
 <h1 align="center">codex-su</h1>
 
-<p align="center">A command-line tool that lets you manage and switch between multiple Codex accounts.</p>
-
 <p align="center">
-  <a href="https://github.com/shayyz-code/codex-su/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/shayyz-code/codex-su/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://github.com/shayyz-code/codex-su/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/shayyz-code/codex-su?sort=semver"></a>
-  <a href="https://www.npmjs.com/package/codex-su"><img alt="npm" src="https://img.shields.io/npm/v/codex-su"></a>
-  <a href="https://github.com/shayyz-code/codex-su/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/shayyz-code/codex-su"></a>
+  <a href="https://github.com/shayyz-code/codex-su/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/shayyz-code/codex-su/ci.yml?style=flat-square"></a>
+  <a href="https://github.com/shayyz-code/codex-su/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/shayyz-code/codex-su?sort=semver&style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/codex-su"><img alt="npm" src="https://img.shields.io/npm/v/codex-su?style=flat-square"></a>
+  <a href="https://github.com/shayyz-code/codex-su/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/shayyz-code/codex-su?style=flat-square"></a>
 </p>
+
+<p align="center">A command-line tool that lets you manage and switch between multiple Codex accounts.</p>
 
 > [!WARNING]
 > Not affiliated with OpenAI or Codex. Not an official tool.
