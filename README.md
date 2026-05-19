@@ -1,6 +1,13 @@
-# codex-su
+<h1 align="center">codex-su</h1>
 
-A command-line tool that lets you manage and switch between multiple Codex accounts.
+<p align="center">A command-line tool that lets you manage and switch between multiple Codex accounts.</p>
+
+<p align="center">
+  <a href="https://github.com/shayyz-code/codex-su/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/shayyz-code/codex-su/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/shayyz-code/codex-su/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/shayyz-code/codex-su?sort=semver"></a>
+  <a href="https://www.npmjs.com/package/codex-su"><img alt="npm" src="https://img.shields.io/npm/v/codex-su"></a>
+  <a href="https://github.com/shayyz-code/codex-su/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/shayyz-code/codex-su"></a>
+</p>
 
 > [!WARNING]
 > Not affiliated with OpenAI or Codex. Not an official tool.
@@ -12,14 +19,34 @@ Codex stores your authentication session in a single `auth.json` file. This tool
 ## Requirements
 
 - Go 1.24 or newer to build from source.
+- Homebrew or npm if you install through those package managers.
 
-## Install From Source
+## Installation
+
+### Homebrew
+
+```sh
+brew tap shayyz-code/tap
+brew install codex-su
+```
+
+### npm
+
+```sh
+npm install -g codex-su
+```
+
+### GitHub Releases
+
+Download the binary for your platform from the [latest release](https://github.com/shayyz-code/codex-su/releases/latest), then put it somewhere on your `PATH`.
+
+### Go install
 
 ```sh
 go install github.com/shayyz-code/codex-su/cmd/codex-su@latest
 ```
 
-## Build Locally
+### Build locally
 
 ```sh
 go build -o bin/codex-su ./cmd/codex-su
