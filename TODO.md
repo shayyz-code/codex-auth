@@ -8,7 +8,7 @@
 - [x] Add CLI workflow tests for command parsing and failures.
 - [x] Add `--json` output for scripts and automation.
 - [x] Add `--codex-home <path>` flag support alongside the existing `CODEX_HOME` override.
-- [x] Add a migration note for existing users moving from `codex-auth` to `codex-su`.
+- [x] Add a state compatibility note for existing account snapshots.
 - [x] Add repository tests that assert CI and release workflows keep running the required checks.
 - [x] Add a tested npm launcher that resolves per-platform binary packages.
 - [x] Add tested npm package manifests for each supported platform binary.

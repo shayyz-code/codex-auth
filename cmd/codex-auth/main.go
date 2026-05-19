@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/shayyz-code/codex-su/internal/cli"
+	"github.com/shayyz-code/codex-auth/internal/cli"
 )
 
 var version = "dev"

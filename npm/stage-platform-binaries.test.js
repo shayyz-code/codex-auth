@@ -13,7 +13,7 @@ const {
 const { stagePlatformBinaries } = require("./stage-platform-binaries");
 
 test("stages release binaries into platform package bin directories", () => {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "codex-su-stage-"));
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "codex-auth-stage-"));
   const distDir = path.join(workspace, "dist");
   const packagesDir = path.join(workspace, "packages");
   fs.mkdirSync(distDir, { recursive: true });
@@ -42,7 +42,7 @@ test("stages release binaries into platform package bin directories", () => {
 });
 
 test("fails when a release binary is missing", () => {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "codex-su-stage-"));
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "codex-auth-stage-"));
   const distDir = path.join(workspace, "dist");
   const packagesDir = path.join(workspace, "packages");
   fs.mkdirSync(distDir, { recursive: true });

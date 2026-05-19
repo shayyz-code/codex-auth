@@ -7,7 +7,7 @@ const path = require("node:path");
 const { supportedPackages } = require("./platform");
 
 const owner = "shayyz-code";
-const repo = "codex-su";
+const repo = "codex-auth";
 const homepage = `https://github.com/${owner}/${repo}`;
 
 function generateHomebrewFormula(options) {
@@ -23,7 +23,7 @@ function generateHomebrewFormula(options) {
   const version = tag.replace(/^v/, "");
   const checksums = readChecksums(distDir);
 
-  return `class CodexSu < Formula
+  return `class CodexAuth < Formula
   desc "Manage named Codex auth snapshots"
   homepage "${homepage}"
   version "${version}"
@@ -31,30 +31,30 @@ function generateHomebrewFormula(options) {
 
   on_macos do
     if Hardware::CPU.arm?
-      url "${releaseURL(tag, "codex-su-darwin-arm64")}"
-      sha256 "${checksums.get("codex-su-darwin-arm64")}"
+      url "${releaseURL(tag, "codex-auth-darwin-arm64")}"
+      sha256 "${checksums.get("codex-auth-darwin-arm64")}"
     else
-      url "${releaseURL(tag, "codex-su-darwin-amd64")}"
-      sha256 "${checksums.get("codex-su-darwin-amd64")}"
+      url "${releaseURL(tag, "codex-auth-darwin-amd64")}"
+      sha256 "${checksums.get("codex-auth-darwin-amd64")}"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "${releaseURL(tag, "codex-su-linux-arm64")}"
-      sha256 "${checksums.get("codex-su-linux-arm64")}"
+      url "${releaseURL(tag, "codex-auth-linux-arm64")}"
+      sha256 "${checksums.get("codex-auth-linux-arm64")}"
     else
-      url "${releaseURL(tag, "codex-su-linux-amd64")}"
-      sha256 "${checksums.get("codex-su-linux-amd64")}"
+      url "${releaseURL(tag, "codex-auth-linux-amd64")}"
+      sha256 "${checksums.get("codex-auth-linux-amd64")}"
     end
   end
 
   def install
-    bin.install Dir["codex-su-*"].first => "codex-su"
+    bin.install Dir["codex-auth-*"].first => "codex-auth"
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/codex-su --version")
+    assert_match version.to_s, shell_output("#{bin}/codex-auth --version")
   end
 end
 `;

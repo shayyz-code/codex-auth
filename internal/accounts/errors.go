@@ -21,7 +21,7 @@ func (e AccountNotFoundError) Error() string {
 type NoAccountsSavedError struct{}
 
 func (NoAccountsSavedError) Error() string {
-	return `No saved Codex accounts yet. Run "codex-su save <name>" first.`
+	return `No saved Codex accounts yet. Run "codex-auth save <name>" first.`
 }
 
 type InvalidAccountNameError struct{}

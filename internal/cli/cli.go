@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/shayyz-code/codex-su/internal/accounts"
+	"github.com/shayyz-code/codex-auth/internal/accounts"
 	"github.com/spf13/cobra"
 )
 
@@ -41,7 +41,7 @@ func NewRootCommand(version string, newService serviceFactory) *cobra.Command {
 	var jsonOutput bool
 
 	root := &cobra.Command{
-		Use:           "codex-su",
+		Use:           "codex-auth",
 		Short:         "Manage named Codex auth snapshots",
 		Version:       version,
 		SilenceErrors: true,
@@ -158,7 +158,7 @@ func newListCommand(serviceForCommand func() (service, error), jsonOutput *bool)
 			}
 
 			if len(names) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "No saved Codex accounts yet. Run `codex-su save <name>`.")
+				fmt.Fprintln(cmd.OutOrStdout(), "No saved Codex accounts yet. Run `codex-auth save <name>`.")
 				return nil
 			}
 
@@ -214,7 +214,6 @@ func printJSON(w io.Writer, v any) error {
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
 }
-
 
 func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service) (string, error) {
 	names, err := accountsService.ListAccountNames()

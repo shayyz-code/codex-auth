@@ -6,6 +6,13 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 
 ## Unreleased
 
+## 0.1.4 - 2026-05-19
+
+### Changed
+
+- Standardized the project, command, release artifact, Homebrew formula, and npm package naming on `codex-auth`.
+- Bumped the root and platform npm packages to `0.1.4` for the next publish attempt.
+
 ## 0.1.3 - 2026-05-19
 
 ### Added
@@ -18,13 +25,12 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 
 ### Changed
 
-- Renamed npm publishing from the unavailable unscoped `codex-su` package to scoped `@shayyz-code/codex-auth` packages while keeping the installed command as `codex-su`.
+- Renamed npm publishing from the unavailable unscoped package to scoped `@shayyz-code/codex-auth` packages.
 - Updated release automation to validate staged npm packages before publishing.
 - Updated migration and distribution milestones to reflect completed Go, npm, signing, and Homebrew work.
 
 ### Changed
 
-- Renamed the CLI package and command from `codex-auth` to `codex-su`.
 - Standardized README usage examples around the production command name.
 - Migrated the CLI implementation from TypeScript/oClif to a Go binary.
 - Replaced Node CI with Go test and build checks.
@@ -38,4 +44,4 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 - Added account-service tests for snapshot, switch, current-account, and validation behavior.
 - Added cross-platform release binary build scaffolding with SHA-256 checksums.
 - Added CLI workflow tests for command parsing, failures, version output, and `--codex-home`.
-- Added npm `bin` metadata and a prepack build so package dry runs expose the `codex-su` executable.
+- Added npm `bin` metadata and a prepack build so package dry runs expose the `codex-auth` executable.

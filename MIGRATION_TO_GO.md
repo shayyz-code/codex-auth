@@ -2,7 +2,7 @@
 
 ## Goal
 
-Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving current user workflows and making production distribution simpler.
+Move `codex-auth` from a Node.js oclif CLI to a small Go binary while preserving current user workflows and making production distribution simpler.
 
 ## Previous App
 
@@ -37,7 +37,7 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 
 3. Switch production binary
 
-- Done: `codex-su` is the only production command.
+- Done: `codex-auth` is the only production command.
 - Done: tagged releases build cross-platform binaries with SHA-256 checksums.
 - Done: tagged releases sign every binary artifact with Sigstore keyless signing.
 - Done: npm packaging uses a root launcher with platform-specific optional binary packages.
@@ -52,7 +52,7 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 
 ## Production Standardization
 
-- Command name: `codex-su`.
+- Command name: `codex-auth`.
 - Versioning: semantic versioning with a `CHANGELOG.md` entry for every release.
 - Releases: created from tags only.
 - CI: build/test on pull requests and main, with repository tests covering the expected workflow checks.
@@ -63,5 +63,5 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 
 - GitHub Release: source archive, binaries, checksums, and Sigstore signature bundles.
 - Homebrew: generated formula pushed to `shayyz-code/homebrew-tap` from tagged releases.
-- npm: package command remains `codex-su`; implementation can point to the Go binary once migrated.
+- npm: package command remains `codex-auth`; implementation can point to the Go binary once migrated.
 - Other package managers: add only after checksums, install tests, and rollback documentation exist.

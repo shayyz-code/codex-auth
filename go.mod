@@ -1,4 +1,4 @@
-module github.com/shayyz-code/codex-su
+module github.com/shayyz-code/codex-auth
 
 go 1.24
 

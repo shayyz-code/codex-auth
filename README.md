@@ -1,10 +1,10 @@
-<h1 align="center">codex-su</h1>
+<h1 align="center">codex-auth</h1>
 
 <p align="center">
-  <a href="https://github.com/shayyz-code/codex-su/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/shayyz-code/codex-su/ci.yml?style=flat-square"></a>
-  <a href="https://github.com/shayyz-code/codex-su/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/shayyz-code/codex-su?sort=semver&style=flat-square"></a>
+  <a href="https://github.com/shayyz-code/codex-auth/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/shayyz-code/codex-auth/ci.yml?style=flat-square"></a>
+  <a href="https://github.com/shayyz-code/codex-auth/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/shayyz-code/codex-auth?sort=semver&style=flat-square"></a>
   <a href="https://www.npmjs.com/package/@shayyz-code/codex-auth"><img alt="npm" src="https://img.shields.io/npm/v/%40shayyz-code%2Fcodex-auth?style=flat-square"></a>
-  <a href="https://github.com/shayyz-code/codex-su/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/shayyz-code/codex-su?style=flat-square"></a>
+  <a href="https://github.com/shayyz-code/codex-auth/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/shayyz-code/codex-auth?style=flat-square"></a>
 </p>
 
 <p align="center">A command-line tool that lets you manage and switch between multiple Codex accounts.</p>
@@ -14,7 +14,7 @@
 
 ## How it Works
 
-Codex stores your authentication session in a single `auth.json` file. This tool works by creating named snapshots of that file for each of your accounts. When you want to switch, `codex-su` swaps the active `~/.codex/auth.json` with the snapshot you select, instantly changing your logged-in account.
+Codex stores your authentication session in a single `auth.json` file. This tool works by creating named snapshots of that file for each of your accounts. When you want to switch, `codex-auth` swaps the active `~/.codex/auth.json` with the snapshot you select, instantly changing your logged-in account.
 
 ## Requirements
 
@@ -27,7 +27,7 @@ Codex stores your authentication session in a single `auth.json` file. This tool
 
 ```sh
 brew tap shayyz-code/tap
-brew install codex-su
+brew install codex-auth
 ```
 
 ### npm
@@ -38,45 +38,45 @@ npm install -g @shayyz-code/codex-auth
 
 ### GitHub Releases
 
-Download the binary for your platform from the [latest release](https://github.com/shayyz-code/codex-su/releases/latest), then put it somewhere on your `PATH`.
+Download the binary for your platform from the [latest release](https://github.com/shayyz-code/codex-auth/releases/latest), then put it somewhere on your `PATH`.
 
 ### Go install
 
 ```sh
-go install github.com/shayyz-code/codex-su/cmd/codex-su@latest
+go install github.com/shayyz-code/codex-auth/cmd/codex-auth@latest
 ```
 
 ### Build locally
 
 ```sh
-go build -o bin/codex-su ./cmd/codex-su
+go build -o bin/codex-auth ./cmd/codex-auth
 ```
 
 ## Usage
 
 ```sh
 # save the current logged-in token as a named account
-codex-su save <name>
+codex-auth save <name>
 
 # switch active account (symlinks on macOS/Linux; copies on Windows)
-codex-su use <name>
+codex-auth use <name>
 
 # or pick interactively
-codex-su use
+codex-auth use
 
 # list accounts
-codex-su list
+codex-auth list
 
 # show current account name
-codex-su current
+codex-auth current
 ```
 
 ### Command reference
 
-- `codex-su save <name>` - validates `<name>`, ensures `auth.json` exists, then snapshots it to `~/.codex/accounts/<name>.json`.
-- `codex-su use [name]` - accepts a name or launches an interactive selector with the current account pre-selected. Copies on Windows, creates a symlink elsewhere, and records the active name.
-- `codex-su list` - lists all saved snapshots alphabetically and marks the active one with `*`.
-- `codex-su current` - prints the active account name, or a friendly message if none is active.
+- `codex-auth save <name>` - validates `<name>`, ensures `auth.json` exists, then snapshots it to `~/.codex/accounts/<name>.json`.
+- `codex-auth use [name]` - accepts a name or launches an interactive selector with the current account pre-selected. Copies on Windows, creates a symlink elsewhere, and records the active name.
+- `codex-auth list` - lists all saved snapshots alphabetically and marks the active one with `*`.
+- `codex-auth current` - prints the active account name, or a friendly message if none is active.
 
 Notes:
 
@@ -91,12 +91,8 @@ Tagged releases publish GitHub binaries, npm packages, and the Homebrew tap form
 - `NPM_TOKEN` - npm automation token with publish access to `@shayyz-code/codex-auth` and the platform binary packages.
 - `HOMEBREW_TAP_TOKEN` - GitHub token with write access to `shayyz-code/homebrew-tap`.
 
-Release tags must use the `v*.*.*` format, for example `v0.1.3`.
+Release tags must use the `v*.*.*` format, for example `v0.1.4`.
 
-## Migrating from `codex-auth`
+## State Compatibility
 
-If you are moving from the legacy `codex-auth` tool:
-
-1.  **Compatible State**: `codex-su` uses the same directory structure (`~/.codex/accounts`) and file format as `codex-auth`. Your existing snapshots will be recognized automatically.
-2.  **Binary Name**: The command has been renamed to `codex-su` to follow the "switch user" convention.
-3.  **Removal**: You can safely uninstall the old tool after installing `codex-su`.
+`codex-auth` stores account snapshots in `~/.codex/accounts` and records the active account in `~/.codex/current`. Existing snapshots in that layout are recognized automatically.

@@ -1,7 +1,7 @@
 {
   "name": "@shayyz-code/codex-auth-linux-arm64",
-  "version": "0.1.3",
-  "description": "Linux arm64 binary for codex-su.",
+  "version": "0.1.4",
+  "description": "Linux arm64 binary for codex-auth.",
   "license": "MIT",
   "os": [
     "linux"
@@ -10,11 +10,11 @@
     "arm64"
   ],
   "files": [
-    "bin/codex-su",
+    "bin/codex-auth",
     "README.md"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shayyz-code/codex-su.git"
+    "url": "git+https://github.com/shayyz-code/codex-auth.git"
   }
 }

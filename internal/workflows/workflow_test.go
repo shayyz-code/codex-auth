@@ -15,7 +15,7 @@ func TestCIWorkflowRunsRequiredChecks(t *testing.T) {
 	assertContains(t, workflow, "- main", "main branch push trigger")
 	assertContains(t, workflow, "go-version-file: go.mod", "Go version pin")
 	assertContains(t, workflow, "run: go test ./...", "Go test step")
-	assertContains(t, workflow, "run: go build -o bin/codex-su ./cmd/codex-su", "CLI build step")
+	assertContains(t, workflow, "run: go build -o bin/codex-auth ./cmd/codex-auth", "CLI build step")
 }
 
 func TestReleaseWorkflowBuildsAuditableTagArtifacts(t *testing.T) {
@@ -52,7 +52,7 @@ func TestReleaseWorkflowBuildsAuditableTagArtifacts(t *testing.T) {
 	assertContains(t, workflow, "repository: shayyz-code/homebrew-tap", "Homebrew tap repository")
 	assertContains(t, workflow, "token: ${{ secrets.HOMEBREW_TAP_TOKEN }}", "Homebrew tap token")
 	assertContains(t, workflow, "npm run generate:homebrew-formula", "Homebrew formula generation")
-	assertContains(t, workflow, "Formula/codex-su.rb", "Homebrew formula path")
+	assertContains(t, workflow, "Formula/codex-auth.rb", "Homebrew formula path")
 	assertContains(t, workflow, "git push", "Homebrew tap push")
 }
 

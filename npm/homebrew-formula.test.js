@@ -13,23 +13,23 @@ test("generates a Homebrew formula for macOS and Linux release binaries", () => 
 
   const formula = generateHomebrewFormula({ tag: "v1.2.3", distDir });
 
-  assert.match(formula, /class CodexSu < Formula/);
+  assert.match(formula, /class CodexAuth < Formula/);
   assert.match(formula, /version "1\.2\.3"/);
   assert.match(formula, /license "MIT"/);
   assert.match(formula, /on_macos do/);
   assert.match(formula, /on_linux do/);
   assert.match(formula, /Hardware::CPU\.arm\?/);
-  assert.match(formula, /codex-su-darwin-arm64/);
-  assert.match(formula, /codex-su-darwin-amd64/);
-  assert.match(formula, /codex-su-linux-arm64/);
-  assert.match(formula, /codex-su-linux-amd64/);
+  assert.match(formula, /codex-auth-darwin-arm64/);
+  assert.match(formula, /codex-auth-darwin-amd64/);
+  assert.match(formula, /codex-auth-linux-arm64/);
+  assert.match(formula, /codex-auth-linux-amd64/);
   assert.doesNotMatch(formula, /windows/);
-  assert.match(formula, /bin\.install Dir\["codex-su-\*"\]\.first => "codex-su"/);
+  assert.match(formula, /bin\.install Dir\["codex-auth-\*"\]\.first => "codex-auth"/);
   assert.match(formula, /assert_match version\.to_s/);
 });
 
 test("fails when a required Homebrew checksum is missing", () => {
-  const distDir = fs.mkdtempSync(path.join(os.tmpdir(), "codex-su-formula-"));
+  const distDir = fs.mkdtempSync(path.join(os.tmpdir(), "codex-auth-formula-"));
 
   assert.throws(
     () => generateHomebrewFormula({ tag: "v1.2.3", distDir }),
@@ -38,12 +38,12 @@ test("fails when a required Homebrew checksum is missing", () => {
 });
 
 function createDistWithChecksums() {
-  const distDir = fs.mkdtempSync(path.join(os.tmpdir(), "codex-su-formula-"));
+  const distDir = fs.mkdtempSync(path.join(os.tmpdir(), "codex-auth-formula-"));
   const artifacts = [
-    "codex-su-darwin-arm64",
-    "codex-su-darwin-amd64",
-    "codex-su-linux-arm64",
-    "codex-su-linux-amd64"
+    "codex-auth-darwin-arm64",
+    "codex-auth-darwin-amd64",
+    "codex-auth-linux-arm64",
+    "codex-auth-linux-amd64"
   ];
 
   for (const [index, artifact] of artifacts.entries()) {

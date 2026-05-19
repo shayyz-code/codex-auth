@@ -24,4 +24,4 @@ jobs:
         run: go test ./...
 
       - name: Build binary
-        run: go build -o bin/codex-su ./cmd/codex-su
+        run: go build -o bin/codex-auth ./cmd/codex-auth

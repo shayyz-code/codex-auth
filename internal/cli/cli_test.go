@@ -92,7 +92,7 @@ func TestExecuteVersion(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("version exit code = %d, stderr = %q", code, stderr)
 	}
-	if strings.TrimSpace(stdout) != "codex-su version test" {
+	if strings.TrimSpace(stdout) != "codex-auth version test" {
 		t.Fatalf("version stdout = %q", stdout)
 	}
 }

@@ -23,14 +23,14 @@ test("maps supported npm platforms to release binary packages", () => {
 test("rejects unsupported npm platforms with a useful error", () => {
   assert.throws(
     () => packageNameForPlatform("freebsd", "x64"),
-    /codex-su does not provide an npm binary package for freebsd-x64/
+    /codex-auth does not provide an npm binary package for freebsd-x64/
   );
 });
 
 test("uses the Windows executable suffix only on Windows", () => {
-  assert.equal(executableNameForPlatform("win32"), "codex-su.exe");
-  assert.equal(executableNameForPlatform("linux"), "codex-su");
-  assert.equal(executableNameForPlatform("darwin"), "codex-su");
+  assert.equal(executableNameForPlatform("win32"), "codex-auth.exe");
+  assert.equal(executableNameForPlatform("linux"), "codex-auth");
+  assert.equal(executableNameForPlatform("darwin"), "codex-auth");
 });
 
 test("declares every platform package as an optional dependency", () => {
