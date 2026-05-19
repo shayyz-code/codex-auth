@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"encoding/base64"
 	"os"
 	"path/filepath"
 	"strings"
@@ -66,6 +67,69 @@ func TestExecuteUsePromptsForAccount(t *testing.T) {
 	}
 	if !strings.Contains(stdout, "Select account:") || !strings.Contains(stdout, `Switched Codex auth to "work".`) {
 		t.Fatalf("use prompt stdout = %q", stdout)
+	}
+}
+
+func TestExecuteUsePromptShowsEmailAndAcceptsEmail(t *testing.T) {
+	codexHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(codexHome, "accounts"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	auth := `{"tokens":{"id_token":"` + testJWT(`{"email":"work@example.com"}`) + `"}}`
+	if err := os.WriteFile(filepath.Join(codexHome, "accounts", "work.json"), []byte(auth), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, code := runCLI(t, strings.NewReader("work@example.com\n"), "--codex-home", codexHome, "use")
+	if code != 0 {
+		t.Fatalf("use prompt exit code = %d, stderr = %q", code, stderr)
+	}
+	if !strings.Contains(stdout, "work <work@example.com>") || !strings.Contains(stdout, `Switched Codex auth to "work".`) {
+		t.Fatalf("use prompt stdout = %q", stdout)
+	}
+}
+
+func TestExecuteRenameShowsSavedNameAndEmail(t *testing.T) {
+	codexHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(codexHome, "accounts"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	auth := `{"tokens":{"id_token":"` + testJWT(`{"email":"work@example.com"}`) + `"}}`
+	if err := os.WriteFile(filepath.Join(codexHome, "accounts", "work.json"), []byte(auth), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, code := runCLI(t, nil, "--codex-home", codexHome, "rename", "work", "office")
+	if code != 0 {
+		t.Fatalf("rename exit code = %d, stderr = %q", code, stderr)
+	}
+	if !strings.Contains(stdout, `Renamed "work" to office (email: work@example.com).`) {
+		t.Fatalf("rename stdout = %q", stdout)
+	}
+	if _, err := os.Stat(filepath.Join(codexHome, "accounts", "office.json")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExecuteRenamePromptsWithEmail(t *testing.T) {
+	codexHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(codexHome, "accounts"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	auth := `{"tokens":{"id_token":"` + testJWT(`{"email":"work@example.com"}`) + `"}}`
+	if err := os.WriteFile(filepath.Join(codexHome, "accounts", "work.json"), []byte(auth), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, code := runCLI(t, strings.NewReader("work@example.com\noffice\n"), "--codex-home", codexHome, "rename")
+	if code != 0 {
+		t.Fatalf("rename prompt exit code = %d, stderr = %q", code, stderr)
+	}
+	if !strings.Contains(stdout, "work <work@example.com>") || !strings.Contains(stdout, "New saved name:") {
+		t.Fatalf("rename prompt stdout = %q", stdout)
+	}
+	if _, err := os.Stat(filepath.Join(codexHome, "accounts", "office.json")); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -217,4 +281,10 @@ func runCLI(t *testing.T, stdin *strings.Reader, args ...string) (string, string
 	var stderr bytes.Buffer
 	code := Execute("test", args, &input, &stdout, &stderr)
 	return stdout.String(), stderr.String(), code
+}
+
+func testJWT(payload string) string {
+	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"none"}`))
+	body := base64.RawURLEncoding.EncodeToString([]byte(payload))
+	return header + "." + body + "."
 }

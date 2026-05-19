@@ -18,6 +18,14 @@ func (e AccountNotFoundError) Error() string {
 	return fmt.Sprintf("No saved Codex account named %q was found.", e.Name)
 }
 
+type AccountAlreadyExistsError struct {
+	Name string
+}
+
+func (e AccountAlreadyExistsError) Error() string {
+	return fmt.Sprintf("A saved Codex account named %q already exists.", e.Name)
+}
+
 type NoAccountsSavedError struct{}
 
 func (NoAccountsSavedError) Error() string {

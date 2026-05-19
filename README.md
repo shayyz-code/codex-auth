@@ -61,8 +61,14 @@ codex-auth save <name>
 # switch active account
 codex-auth use <name>
 
-# or pick interactively
+# or pick interactively by number, saved name, or email
 codex-auth use
+
+# rename a saved account
+codex-auth rename <old-name> <new-name>
+
+# or pick the account to rename interactively
+codex-auth rename
 
 # list accounts
 codex-auth list
@@ -74,9 +80,10 @@ codex-auth current
 ### Command reference
 
 - `codex-auth save <name>` - validates `<name>`, ensures `auth.json` exists, then snapshots it to `~/.codex/accounts/<name>.json`. The requested name is always honored, so `save new-account` writes that account even if the active auth matches another saved snapshot.
-- `codex-auth use [name]` - accepts a name or launches an interactive selector with the current account pre-selected. On startup, the live Codex `auth.json` is matched against saved snapshots and `current` is refreshed before commands run. If `<name>` is mistyped, the closest saved account is suggested. Before switching away from an unsaved live Codex login, interactive mode asks whether to save it. Copies the saved snapshot into place and records the active name. Interactive terminal output uses color when supported; piped output and `--json` remain stable for automation.
-- `codex-auth list` - lists all saved snapshots alphabetically and marks the active one with `*`.
-- `codex-auth current` - prints the active account name, or a friendly message if none is active.
+- `codex-auth use [name]` - accepts a name or launches an interactive selector with saved names and detected account emails. The selector accepts a number, saved name, or email. On startup, the live Codex `auth.json` is matched against saved snapshots and `current` is refreshed before commands run. If `<name>` is mistyped, the closest saved account is suggested. Before switching away from an unsaved live Codex login, interactive mode asks whether to save it. Copies the saved snapshot into place and records the active name. Interactive terminal output uses color when supported; piped output and `--json` remain stable for automation.
+- `codex-auth rename [old-name] [new-name]` - renames a saved snapshot and shows both the saved name and detected account email when available. Without arguments, it opens the same email-aware picker used by `use`.
+- `codex-auth list` - lists all saved snapshots alphabetically, shows detected emails when available, and marks the active one with `*`.
+- `codex-auth current` - prints the active account name and detected email when available, or a friendly message if none is active.
 - `--color auto|always|never` - controls terminal color. `auto` respects TTY detection and `NO_COLOR`; use `always` to force the enhanced interactive styling.
 
 Notes:

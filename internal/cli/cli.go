@@ -15,11 +15,14 @@ import (
 )
 
 type service interface {
+	ListAccounts() ([]accounts.AccountInfo, error)
 	ListAccountNames() ([]string, error)
 	CurrentAccountName() (string, bool, error)
 	AuthFileExists() (bool, error)
 	CurrentAuthSavedAccount() (string, bool, error)
 	SyncCurrentAccount() (string, bool, error)
+	AccountEmail(string) (string, error)
+	RenameAccount(string, string) (accounts.AccountInfo, error)
 	SaveAccount(string) (string, error)
 	UseAccount(string) (string, error)
 }
@@ -70,6 +73,7 @@ func NewRootCommand(version string, newService serviceFactory) *cobra.Command {
 
 	root.AddCommand(newSaveCommand(serviceForCommand, &jsonOutput, &colorMode))
 	root.AddCommand(newUseCommand(serviceForCommand, &jsonOutput, &colorMode))
+	root.AddCommand(newRenameCommand(serviceForCommand, &jsonOutput, &colorMode))
 	root.AddCommand(newListCommand(serviceForCommand, &jsonOutput, &colorMode))
 	root.AddCommand(newCurrentCommand(serviceForCommand, &jsonOutput, &colorMode))
 	return root
@@ -152,6 +156,70 @@ func newUseCommand(serviceForCommand func() (service, error), jsonOutput *bool, 
 	}
 }
 
+func newRenameCommand(serviceForCommand func() (service, error), jsonOutput *bool, colorMode *string) *cobra.Command {
+	return &cobra.Command{
+		Use:   "rename [old-name] [new-name]",
+		Short: "Rename a saved Codex account",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 || len(args) == 2 {
+				return nil
+			}
+			return fmt.Errorf("accepts either 0 or 2 arg(s), received %d", len(args))
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			accountsService, err := serviceForCommand()
+			if err != nil {
+				return err
+			}
+			input := bufio.NewReader(cmd.InOrStdin())
+			oldRaw := ""
+			newRaw := ""
+			if len(args) == 2 {
+				oldRaw = args[0]
+				newRaw = args[1]
+			} else {
+				if *jsonOutput {
+					return errors.New("The [old-name] and [new-name] arguments are required when using --json.")
+				}
+				oldRaw, err = promptForAccount(input, cmd.OutOrStdout(), accountsService, *colorMode)
+				if err != nil {
+					return err
+				}
+				style := newStyle(cmd.OutOrStdout(), *colorMode)
+				fmt.Fprint(cmd.OutOrStdout(), style.prompt("New saved name: "))
+				line, err := input.ReadString('\n')
+				if err != nil && !errors.Is(err, io.EOF) {
+					return err
+				}
+				newRaw = strings.TrimSpace(line)
+			}
+			oldName, err := accounts.NormalizeAccountName(oldRaw)
+			if err != nil {
+				return err
+			}
+			info, err := accountsService.RenameAccount(oldRaw, newRaw)
+			if err != nil {
+				return addAccountSuggestion(err, oldRaw, accountsService)
+			}
+			if *jsonOutput {
+				return printJSON(cmd.OutOrStdout(), map[string]any{
+					"from":  oldName,
+					"to":    info.Name,
+					"email": nullableString(info.Email),
+				})
+			}
+
+			style := newStyle(cmd.OutOrStdout(), *colorMode)
+			detail := info.Name
+			if info.Email != "" {
+				detail += fmt.Sprintf(" (email: %s)", info.Email)
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "%s\n", style.successf("Renamed %q to %s.", oldName, detail))
+			return nil
+		},
+	}
+}
+
 func newListCommand(serviceForCommand func() (service, error), jsonOutput *bool, colorMode *string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
@@ -162,10 +230,11 @@ func newListCommand(serviceForCommand func() (service, error), jsonOutput *bool,
 			if err != nil {
 				return err
 			}
-			names, err := accountsService.ListAccountNames()
+			infos, err := accountsService.ListAccounts()
 			if err != nil {
 				return err
 			}
+			names := accountNames(infos)
 			current, ok, err := accountsService.CurrentAccountName()
 			if err != nil {
 				return err
@@ -174,6 +243,7 @@ func newListCommand(serviceForCommand func() (service, error), jsonOutput *bool,
 			if *jsonOutput {
 				res := map[string]any{
 					"accounts": names,
+					"details":  accountDetails(infos),
 				}
 				if ok {
 					res["current"] = current
@@ -193,15 +263,15 @@ func newListCommand(serviceForCommand func() (service, error), jsonOutput *bool,
 			if style.enabled {
 				fmt.Fprintln(cmd.OutOrStdout(), style.title("Saved Codex accounts"))
 			}
-			for _, name := range names {
+			for _, info := range infos {
 				mark := " "
-				if ok && current == name {
+				if ok && current == info.Name {
 					mark = "*"
 				}
 				if style.enabled {
-					fmt.Fprintf(cmd.OutOrStdout(), "%s %s\n", style.marker(mark, mark == "*"), style.account(name, ok && current == name))
+					fmt.Fprintf(cmd.OutOrStdout(), "%s %s\n", style.marker(mark, mark == "*"), style.account(formatAccountInfo(info), ok && current == info.Name))
 				} else {
-					fmt.Fprintf(cmd.OutOrStdout(), "%s %s\n", mark, name)
+					fmt.Fprintf(cmd.OutOrStdout(), "%s %s\n", mark, formatAccountInfo(info))
 				}
 			}
 			return nil
@@ -228,8 +298,14 @@ func newCurrentCommand(serviceForCommand func() (service, error), jsonOutput *bo
 				res := map[string]any{}
 				if ok {
 					res["account"] = name
+					email, err := accountsService.AccountEmail(name)
+					if err != nil {
+						return err
+					}
+					res["email"] = nullableString(email)
 				} else {
 					res["account"] = nil
+					res["email"] = nil
 				}
 				return printJSON(cmd.OutOrStdout(), res)
 			}
@@ -240,10 +316,15 @@ func newCurrentCommand(serviceForCommand func() (service, error), jsonOutput *bo
 				return nil
 			}
 			style := newStyle(cmd.OutOrStdout(), *colorMode)
+			email, err := accountsService.AccountEmail(name)
+			if err != nil {
+				return err
+			}
+			label := formatAccountInfo(accounts.AccountInfo{Name: name, Email: email})
 			if style.enabled {
-				fmt.Fprintln(cmd.OutOrStdout(), style.account(name, true))
+				fmt.Fprintln(cmd.OutOrStdout(), style.account(label, true))
 			} else {
-				fmt.Fprintln(cmd.OutOrStdout(), name)
+				fmt.Fprintln(cmd.OutOrStdout(), label)
 			}
 			return nil
 		},
@@ -254,6 +335,39 @@ func printJSON(w io.Writer, v any) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
+}
+
+func accountNames(infos []accounts.AccountInfo) []string {
+	names := make([]string, 0, len(infos))
+	for _, info := range infos {
+		names = append(names, info.Name)
+	}
+	return names
+}
+
+func accountDetails(infos []accounts.AccountInfo) []map[string]any {
+	details := make([]map[string]any, 0, len(infos))
+	for _, info := range infos {
+		details = append(details, map[string]any{
+			"name":  info.Name,
+			"email": nullableString(info.Email),
+		})
+	}
+	return details
+}
+
+func formatAccountInfo(info accounts.AccountInfo) string {
+	if info.Email == "" {
+		return info.Name
+	}
+	return fmt.Sprintf("%s <%s>", info.Name, info.Email)
+}
+
+func nullableString(value string) any {
+	if value == "" {
+		return nil
+	}
+	return value
 }
 
 type cliStyle struct {
@@ -487,11 +601,11 @@ func minInt(values ...int) int {
 }
 
 func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service, colorMode string) (string, error) {
-	names, err := accountsService.ListAccountNames()
+	infos, err := accountsService.ListAccounts()
 	if err != nil {
 		return "", err
 	}
-	if len(names) == 0 {
+	if len(infos) == 0 {
 		return "", accounts.NoAccountsSavedError{}
 	}
 
@@ -502,22 +616,27 @@ func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service
 
 	style := newStyle(stdout, colorMode)
 	if style.enabled {
-		fmt.Fprintln(stdout, style.title("Select account"))
+		fmt.Fprintln(stdout, style.title("Codex accounts"))
+		fmt.Fprintln(stdout, style.hint("Choose by number, saved name, or email."))
 	} else {
 		fmt.Fprintln(stdout, "Select account:")
 	}
-	for i, name := range names {
-		label := name
-		if ok && current == name {
-			label += " (active)"
-		}
+	for i, info := range infos {
+		label := formatAccountInfo(info)
 		if style.enabled {
-			fmt.Fprintf(stdout, "  %s) %s\n", style.color(strconv.Itoa(i+1), "36"), style.account(label, ok && current == name))
+			status := ""
+			if ok && current == info.Name {
+				status = " " + style.color("active", "1", "32")
+			}
+			fmt.Fprintf(stdout, "  %s  %s%s\n", style.color(strconv.Itoa(i+1), "36"), style.account(label, ok && current == info.Name), status)
 		} else {
+			if ok && current == info.Name {
+				label += " (active)"
+			}
 			fmt.Fprintf(stdout, "  %d) %s\n", i+1, label)
 		}
 	}
-	fmt.Fprint(stdout, style.prompt("Enter number: "))
+	fmt.Fprint(stdout, style.prompt("Select account: "))
 
 	line, err := promptReader(stdin).ReadString('\n')
 	if err != nil && !errors.Is(err, io.EOF) {
@@ -525,10 +644,18 @@ func promptForAccount(stdin io.Reader, stdout io.Writer, accountsService service
 	}
 	line = strings.TrimSpace(line)
 	index, err := strconv.Atoi(line)
-	if err != nil || index < 1 || index > len(names) {
-		return "", errors.New("No account selected. The operation was cancelled.")
+	if err == nil {
+		if index < 1 || index > len(infos) {
+			return "", errors.New("No account selected. The operation was cancelled.")
+		}
+		return infos[index-1].Name, nil
 	}
-	return names[index-1], nil
+	for _, info := range infos {
+		if strings.EqualFold(info.Name, line) || strings.EqualFold(info.Email, line) {
+			return info.Name, nil
+		}
+	}
+	return "", errors.New("No account selected. The operation was cancelled.")
 }
 
 func promptReader(stdin io.Reader) *bufio.Reader {

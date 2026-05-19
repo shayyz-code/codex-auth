@@ -95,3 +95,27 @@ func TestUseWithoutNameFailsWithJSON(t *testing.T) {
 		t.Fatalf("stderr = %q", stderr)
 	}
 }
+
+func TestRenameWithJSONIncludesEmail(t *testing.T) {
+	codexHome := t.TempDir()
+	accountsDir := filepath.Join(codexHome, "accounts")
+	if err := os.MkdirAll(accountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	auth := `{"email":"work@example.com"}`
+	if err := os.WriteFile(filepath.Join(accountsDir, "work.json"), []byte(auth), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, code := runCLI(t, nil, "--codex-home", codexHome, "--json", "rename", "work", "office")
+	if code != 0 {
+		t.Fatalf("rename --json exit code = %d, stderr = %q", code, stderr)
+	}
+	var res map[string]any
+	if err := json.Unmarshal([]byte(stdout), &res); err != nil {
+		t.Fatalf("failed to unmarshal rename --json output: %v, stdout: %q", err, stdout)
+	}
+	if res["from"] != "work" || res["to"] != "office" || res["email"] != "work@example.com" {
+		t.Fatalf("rename --json = %v, want from work to office with email", res)
+	}
+}

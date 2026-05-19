@@ -2,6 +2,8 @@ package accounts
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -47,6 +49,11 @@ type Service struct {
 	paths Paths
 }
 
+type AccountInfo struct {
+	Name  string `json:"name"`
+	Email string `json:"email,omitempty"`
+}
+
 func NewService(paths Paths) *Service {
 	return &Service{paths: paths}
 }
@@ -73,6 +80,22 @@ func (s *Service) ListAccountNames() ([]string, error) {
 	})
 
 	return names, nil
+}
+
+func (s *Service) ListAccounts() ([]AccountInfo, error) {
+	names, err := s.ListAccountNames()
+	if err != nil {
+		return nil, err
+	}
+	accounts := make([]AccountInfo, 0, len(names))
+	for _, name := range names {
+		email, err := s.AccountEmail(name)
+		if err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, AccountInfo{Name: name, Email: email})
+	}
+	return accounts, nil
 }
 
 func (s *Service) CurrentAccountName() (string, bool, error) {
@@ -174,6 +197,55 @@ func (s *Service) UseAccount(rawName string) (string, error) {
 	return name, nil
 }
 
+func (s *Service) RenameAccount(rawOldName string, rawNewName string) (AccountInfo, error) {
+	oldName, err := NormalizeAccountName(rawOldName)
+	if err != nil {
+		return AccountInfo{}, err
+	}
+	newName, err := NormalizeAccountName(rawNewName)
+	if err != nil {
+		return AccountInfo{}, err
+	}
+	oldPath := s.accountFilePath(oldName)
+	if _, err := os.Stat(oldPath); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return AccountInfo{}, AccountNotFoundError{Name: oldName}
+		}
+		return AccountInfo{}, err
+	}
+	if oldName == newName {
+		email, err := s.AccountEmail(oldName)
+		if err != nil {
+			return AccountInfo{}, err
+		}
+		return AccountInfo{Name: oldName, Email: email}, nil
+	}
+	newPath := s.accountFilePath(newName)
+	if _, err := os.Stat(newPath); err == nil {
+		return AccountInfo{}, AccountAlreadyExistsError{Name: newName}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return AccountInfo{}, err
+	}
+
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return AccountInfo{}, err
+	}
+	current, ok, err := s.CurrentAccountName()
+	if err != nil {
+		return AccountInfo{}, err
+	}
+	if ok && current == oldName {
+		if err := writeFileAtomic(s.paths.CurrentNamePath, []byte(newName+"\n"), 0o600); err != nil {
+			return AccountInfo{}, err
+		}
+	}
+	email, err := s.AccountEmail(newName)
+	if err != nil {
+		return AccountInfo{}, err
+	}
+	return AccountInfo{Name: newName, Email: email}, nil
+}
+
 func (s *Service) AuthFileExists() (bool, error) {
 	if _, err := os.Stat(s.paths.AuthPath); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -182,6 +254,21 @@ func (s *Service) AuthFileExists() (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func (s *Service) AccountEmail(rawName string) (string, error) {
+	name, err := NormalizeAccountName(rawName)
+	if err != nil {
+		return "", err
+	}
+	contents, err := os.ReadFile(s.accountFilePath(name))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", AccountNotFoundError{Name: name}
+		}
+		return "", err
+	}
+	return extractAuthEmail(contents), nil
 }
 
 func (s *Service) CurrentAuthSavedAccount() (string, bool, error) {
@@ -306,6 +393,60 @@ func quarantineOverwrittenAccount(path string) error {
 
 func timeNowUTC() string {
 	return time.Now().UTC().Format("20060102T150405Z")
+}
+
+func extractAuthEmail(contents []byte) string {
+	var auth map[string]any
+	if err := json.Unmarshal(contents, &auth); err != nil {
+		return ""
+	}
+	if email := findEmail(auth); email != "" {
+		return email
+	}
+	if tokens, ok := auth["tokens"].(map[string]any); ok {
+		if email := findEmail(tokens); email != "" {
+			return email
+		}
+		if token, ok := tokens["id_token"].(string); ok {
+			return extractJWTEmail(token)
+		}
+	}
+	return ""
+}
+
+func findEmail(value any) string {
+	switch typed := value.(type) {
+	case map[string]any:
+		for _, key := range []string{"email", "preferred_username", "login"} {
+			if email, ok := typed[key].(string); ok && strings.Contains(email, "@") {
+				return email
+			}
+		}
+		for _, key := range []string{"user", "account", "profile"} {
+			if nested, ok := typed[key]; ok {
+				if email := findEmail(nested); email != "" {
+					return email
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func extractJWTEmail(token string) string {
+	parts := strings.Split(token, ".")
+	if len(parts) < 2 {
+		return ""
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return ""
+	}
+	var claims map[string]any
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return ""
+	}
+	return findEmail(claims)
 }
 
 func (s *Service) accountNameForAuthContents(authContents []byte, skipName string) (string, bool, error) {

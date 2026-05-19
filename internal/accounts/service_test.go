@@ -1,6 +1,7 @@
 package accounts
 
 import (
+	"encoding/base64"
 	"errors"
 	"os"
 	"path/filepath"
@@ -85,6 +86,83 @@ func TestUseAccountActivatesSavedAccountAndRecordsCurrent(t *testing.T) {
 	}
 	if info.Mode()&os.ModeSymlink != 0 {
 		t.Fatal("auth.json is a symlink")
+	}
+}
+
+func TestAccountEmailExtractsJWTEmail(t *testing.T) {
+	paths := NewPaths(t.TempDir())
+	service := NewService(paths)
+
+	if err := os.MkdirAll(paths.AccountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	auth := `{"tokens":{"id_token":"` + testJWT(`{"email":"work@example.com"}`) + `"}}`
+	if err := os.WriteFile(filepath.Join(paths.AccountsDir, "work.json"), []byte(auth), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	email, err := service.AccountEmail("work")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if email != "work@example.com" {
+		t.Fatalf("email = %q, want work@example.com", email)
+	}
+}
+
+func TestRenameAccountRenamesSnapshotAndCurrentMarker(t *testing.T) {
+	paths := NewPaths(t.TempDir())
+	service := NewService(paths)
+
+	if err := os.MkdirAll(paths.AccountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	auth := `{"tokens":{"id_token":"` + testJWT(`{"email":"work@example.com"}`) + `"}}`
+	if err := os.WriteFile(filepath.Join(paths.AccountsDir, "work.json"), []byte(auth), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(paths.CurrentNamePath, []byte("work\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	info, err := service.RenameAccount("work", "office")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Name != "office" || info.Email != "work@example.com" {
+		t.Fatalf("info = %+v, want office with email", info)
+	}
+	if _, err := os.Stat(filepath.Join(paths.AccountsDir, "work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("old account exists after rename: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(paths.AccountsDir, "office.json")); err != nil {
+		t.Fatal(err)
+	}
+	current, ok, err := service.CurrentAccountName()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok || current != "office" {
+		t.Fatalf("current = %q, %v; want office, true", current, ok)
+	}
+}
+
+func TestRenameAccountRejectsExistingDestination(t *testing.T) {
+	paths := NewPaths(t.TempDir())
+	service := NewService(paths)
+
+	if err := os.MkdirAll(paths.AccountsDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(paths.AccountsDir, "work.json"), []byte(`{"token":"work"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(paths.AccountsDir, "office.json"), []byte(`{"token":"office"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := service.RenameAccount("work", "office"); err == nil {
+		t.Fatal("expected destination exists error")
 	}
 }
 
@@ -365,4 +443,10 @@ func join(values []string) string {
 		result += "," + value
 	}
 	return result
+}
+
+func testJWT(payload string) string {
+	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"none"}`))
+	body := base64.RawURLEncoding.EncodeToString([]byte(payload))
+	return header + "." + body + "."
 }
