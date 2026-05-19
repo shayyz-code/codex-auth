@@ -96,7 +96,11 @@ codex-auth current
 
 ## Screenshots
 
-Screenshots for the terminal picker and account table will be added before the `v0.2.0` release.
+Accounts list table:
+<img width="917" height="786" alt="Screenshot 2026-05-19 at 19 28 48" src="https://github.com/user-attachments/assets/fd058cb5-9529-451d-93ea-5551132a774b" />
+
+See current account and interactive use command for account switching:
+<img width="960" height="823" alt="Screen Recording 2026-05-19 at 19 30 20" src="https://github.com/user-attachments/assets/15f05ea4-abdc-47c1-af22-1bf53472f000" />
 
 ### Command reference
 
