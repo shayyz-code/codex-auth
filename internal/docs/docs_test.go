@@ -36,6 +36,17 @@ func TestREADMEDocumentsBadgesAndInstallation(t *testing.T) {
 	assertContains(t, readme, "go install github.com/shayyz-code/codex-auth/cmd/codex-auth@latest")
 }
 
+func TestREADMEDocumentsScreenshotsAndNotices(t *testing.T) {
+	readme := readREADME(t)
+
+	assertContains(t, readme, "## Screenshots")
+	assertContains(t, readme, "Interactive account selection uses a terminal picker")
+	assertContains(t, readme, "┌────────┬──────────┬──────────────────────┐")
+	assertContains(t, readme, "## Notice")
+	assertContains(t, readme, "Treat files under `~/.codex` as sensitive credentials.")
+	assertContains(t, readme, "Scoop, Winget, Arch AUR, Docker")
+}
+
 func TestContributingDocumentsChecksAndReleasePreparation(t *testing.T) {
 	contributing := readProjectFile(t, "CONTRIBUTING.md")
 

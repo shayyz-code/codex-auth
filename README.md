@@ -77,6 +77,31 @@ codex-auth list
 codex-auth current
 ```
 
+## Screenshots
+
+Interactive account selection uses a terminal picker with arrow-key navigation:
+
+```text
+? Select Codex account:
+  personal <personal@example.com>
+▸ work <work@example.com>
+
+Saved name: work
+Email: work@example.com
+```
+
+Account listing uses a stable table format for scanning and scripts:
+
+```text
+Saved Codex accounts
+┌────────┬──────────┬──────────────────────┐
+│ Active │ Name     │ Email                │
+├────────┼──────────┼──────────────────────┤
+│        │ personal │ personal@example.com │
+│ *      │ work     │ work@example.com     │
+└────────┴──────────┴──────────────────────┘
+```
+
 ### Command reference
 
 - `codex-auth save <name>` - validates `<name>`, ensures `auth.json` exists, then snapshots it to `~/.codex/accounts/<name>.json`. The requested name is always honored, so `save new-account` writes that account even if the active auth matches another saved snapshot.
@@ -86,10 +111,12 @@ codex-auth current
 - `codex-auth current` - prints the active account name and detected email when available, or a friendly message if none is active.
 - `--color auto|always|never` - controls terminal color. `auto` respects TTY detection and `NO_COLOR`; use `always` to force the enhanced interactive styling.
 
-Notes:
+## Notice
 
-- Uses regular file copies on all platforms so external Codex logins cannot overwrite saved account snapshots through `auth.json`. Older symlink-based activations are detached automatically if Codex appears to have written through the symlink.
-- Release binaries are built for macOS, Linux, and Windows from tagged releases.
+- This is an unofficial tool and is not affiliated with OpenAI or Codex.
+- `codex-auth` manages local Codex auth snapshots. Treat files under `~/.codex` as sensitive credentials.
+- The tool uses regular file copies on all platforms so external Codex logins cannot overwrite saved account snapshots through `auth.json`. Older symlink-based activations are detached automatically if Codex appears to have written through the symlink.
+- Release binaries are built for macOS, Linux, and Windows from tagged releases. Scoop, Winget, Arch AUR, Docker, and other distribution channels are release follow-ups, not blockers for `v0.2.0`.
 - Set `CODEX_HOME` or pass `--codex-home <path>` to use a nonstandard Codex config directory for tests, automation, or isolated environments.
 
 ## Release Setup

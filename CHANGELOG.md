@@ -18,12 +18,14 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 - Added bordered account table output for `list`.
 - Added `make version VERSION=<semver>` to update root and platform npm package versions together.
 - Added contributor documentation.
+- Added README screenshots and notices for release readiness.
 
 ### Changed
 
 - `save <name>` now always writes to the requested account name, even when the live auth matches another saved account.
 - `use` no longer accepts numeric prompt input; terminal selection uses the interactive picker and piped input accepts saved names or emails.
 - Cancelling the interactive picker exits cleanly instead of falling back to a secondary prompt.
+- Deferred additional distribution channel evaluation until after the `v0.2.0` release.
 
 ## 0.1.4 - 2026-05-19
 
