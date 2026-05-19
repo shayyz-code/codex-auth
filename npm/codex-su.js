@@ -23,7 +23,7 @@ function main() {
     packageJSONPath = require.resolve(`${packageName}/package.json`);
   } catch {
     console.error(
-      `Missing optional dependency ${packageName}. Reinstall codex-su for this platform.`
+      `Missing optional dependency ${packageName}. Reinstall @shayyz-code/codex-auth for this platform.`
     );
     process.exit(1);
   }

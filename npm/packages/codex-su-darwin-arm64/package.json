@@ -1,5 +1,5 @@
 {
-  "name": "codex-su-darwin-arm64",
+  "name": "@shayyz-code/codex-auth-darwin-arm64",
   "version": "0.1.3",
   "description": "macOS arm64 binary for codex-su.",
   "license": "MIT",

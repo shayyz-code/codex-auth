@@ -18,6 +18,7 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 
 ### Changed
 
+- Renamed npm publishing from the unavailable unscoped `codex-su` package to scoped `@shayyz-code/codex-auth` packages while keeping the installed command as `codex-su`.
 - Updated release automation to validate staged npm packages before publishing.
 - Updated migration and distribution milestones to reflect completed Go, npm, signing, and Homebrew work.
 

@@ -19,7 +19,7 @@ function stagePlatformBinaries(options = {}) {
     const source = path.join(distDir, platformPackage.artifactName);
     const destination = path.join(
       packagesDir,
-      platformPackage.packageName,
+      platformPackage.packageDir,
       "bin",
       executableNameForPlatform(platformPackage.platform)
     );

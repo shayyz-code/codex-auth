@@ -31,7 +31,7 @@ test("stages release binaries into platform package bin directories", () => {
   for (const platformPackage of supportedPackages()) {
     const destination = path.join(
       packagesDir,
-      platformPackage.packageName,
+      platformPackage.packageDir,
       "bin",
       executableNameForPlatform(platformPackage.platform)
     );

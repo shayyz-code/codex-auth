@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://github.com/shayyz-code/codex-su/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/shayyz-code/codex-su/ci.yml?style=flat-square"></a>
   <a href="https://github.com/shayyz-code/codex-su/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/shayyz-code/codex-su?sort=semver&style=flat-square"></a>
-  <a href="https://www.npmjs.com/package/codex-su"><img alt="npm" src="https://img.shields.io/npm/v/codex-su?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/@shayyz-code/codex-auth"><img alt="npm" src="https://img.shields.io/npm/v/%40shayyz-code%2Fcodex-auth?style=flat-square"></a>
   <a href="https://github.com/shayyz-code/codex-su/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/shayyz-code/codex-su?style=flat-square"></a>
 </p>
 
@@ -33,7 +33,7 @@ brew install codex-su
 ### npm
 
 ```sh
-npm install -g codex-su
+npm install -g @shayyz-code/codex-auth
 ```
 
 ### GitHub Releases
@@ -88,7 +88,7 @@ Notes:
 
 Tagged releases publish GitHub binaries, npm packages, and the Homebrew tap formula. Configure these GitHub Actions secrets before creating a release tag:
 
-- `NPM_TOKEN` - npm automation token with publish access to `codex-su` and the platform binary packages.
+- `NPM_TOKEN` - npm automation token with publish access to `@shayyz-code/codex-auth` and the platform binary packages.
 - `HOMEBREW_TAP_TOKEN` - GitHub token with write access to `shayyz-code/homebrew-tap`.
 
 Release tags must use the `v*.*.*` format, for example `v0.1.3`.

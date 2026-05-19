@@ -13,11 +13,11 @@ const {
 } = require("./platform");
 
 test("maps supported npm platforms to release binary packages", () => {
-  assert.equal(packageNameForPlatform("darwin", "arm64"), "codex-su-darwin-arm64");
-  assert.equal(packageNameForPlatform("darwin", "x64"), "codex-su-darwin-amd64");
-  assert.equal(packageNameForPlatform("linux", "arm64"), "codex-su-linux-arm64");
-  assert.equal(packageNameForPlatform("linux", "x64"), "codex-su-linux-amd64");
-  assert.equal(packageNameForPlatform("win32", "x64"), "codex-su-windows-amd64");
+  assert.equal(packageNameForPlatform("darwin", "arm64"), "@shayyz-code/codex-auth-darwin-arm64");
+  assert.equal(packageNameForPlatform("darwin", "x64"), "@shayyz-code/codex-auth-darwin-amd64");
+  assert.equal(packageNameForPlatform("linux", "arm64"), "@shayyz-code/codex-auth-linux-arm64");
+  assert.equal(packageNameForPlatform("linux", "x64"), "@shayyz-code/codex-auth-linux-amd64");
+  assert.equal(packageNameForPlatform("win32", "x64"), "@shayyz-code/codex-auth-windows-amd64");
 });
 
 test("rejects unsupported npm platforms with a useful error", () => {
@@ -46,7 +46,7 @@ test("defines package metadata for every supported platform package", () => {
   const rootPackageJSON = require("../package.json");
 
   for (const platformPackage of supportedPackages()) {
-    const packageJSON = readPackageJSON(platformPackage.packageName);
+    const packageJSON = readPackageJSON(platformPackage.packageDir);
 
     assert.equal(packageJSON.name, platformPackage.packageName);
     assert.equal(packageJSON.version, rootPackageJSON.version);
@@ -63,7 +63,7 @@ test("defines package metadata for every supported platform package", () => {
   }
 });
 
-function readPackageJSON(packageName) {
-  const packageJSONPath = path.join(__dirname, "packages", packageName, "package.json");
+function readPackageJSON(packageDir) {
+  const packageJSONPath = path.join(__dirname, "packages", packageDir, "package.json");
   return JSON.parse(fs.readFileSync(packageJSONPath, "utf8"));
 }

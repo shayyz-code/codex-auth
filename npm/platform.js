@@ -4,31 +4,36 @@ const platformPackages = [
   {
     platform: "darwin",
     arch: "arm64",
-    packageName: "codex-su-darwin-arm64",
+    packageName: "@shayyz-code/codex-auth-darwin-arm64",
+    packageDir: "codex-su-darwin-arm64",
     artifactName: "codex-su-darwin-arm64"
   },
   {
     platform: "darwin",
     arch: "x64",
-    packageName: "codex-su-darwin-amd64",
+    packageName: "@shayyz-code/codex-auth-darwin-amd64",
+    packageDir: "codex-su-darwin-amd64",
     artifactName: "codex-su-darwin-amd64"
   },
   {
     platform: "linux",
     arch: "arm64",
-    packageName: "codex-su-linux-arm64",
+    packageName: "@shayyz-code/codex-auth-linux-arm64",
+    packageDir: "codex-su-linux-arm64",
     artifactName: "codex-su-linux-arm64"
   },
   {
     platform: "linux",
     arch: "x64",
-    packageName: "codex-su-linux-amd64",
+    packageName: "@shayyz-code/codex-auth-linux-amd64",
+    packageDir: "codex-su-linux-amd64",
     artifactName: "codex-su-linux-amd64"
   },
   {
     platform: "win32",
     arch: "x64",
-    packageName: "codex-su-windows-amd64",
+    packageName: "@shayyz-code/codex-auth-windows-amd64",
+    packageDir: "codex-su-windows-amd64",
     artifactName: "codex-su-windows-amd64.exe"
   }
 ];
