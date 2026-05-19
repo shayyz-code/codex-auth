@@ -1,23 +1,29 @@
 "use strict";
 
-const packageByPlatform = {
-  "darwin-arm64": "codex-su-darwin-arm64",
-  "darwin-x64": "codex-su-darwin-amd64",
-  "linux-arm64": "codex-su-linux-arm64",
-  "linux-x64": "codex-su-linux-amd64",
-  "win32-x64": "codex-su-windows-amd64"
-};
+const platformPackages = [
+  { platform: "darwin", arch: "arm64", packageName: "codex-su-darwin-arm64" },
+  { platform: "darwin", arch: "x64", packageName: "codex-su-darwin-amd64" },
+  { platform: "linux", arch: "arm64", packageName: "codex-su-linux-arm64" },
+  { platform: "linux", arch: "x64", packageName: "codex-su-linux-amd64" },
+  { platform: "win32", arch: "x64", packageName: "codex-su-windows-amd64" }
+];
 
 function supportedPackageNames() {
-  return Object.values(packageByPlatform).sort();
+  return supportedPackages().map(({ packageName }) => packageName).sort();
+}
+
+function supportedPackages() {
+  return platformPackages.map((platformPackage) => ({ ...platformPackage }));
 }
 
 function packageNameForPlatform(platform = process.platform, arch = process.arch) {
-  const packageName = packageByPlatform[`${platform}-${arch}`];
-  if (!packageName) {
+  const platformPackage = platformPackages.find(
+    (candidate) => candidate.platform === platform && candidate.arch === arch
+  );
+  if (!platformPackage) {
     throw new Error(`codex-su does not provide an npm binary package for ${platform}-${arch}.`);
   }
-  return packageName;
+  return platformPackage.packageName;
 }
 
 function executableNameForPlatform(platform = process.platform) {
@@ -27,5 +33,6 @@ function executableNameForPlatform(platform = process.platform) {
 module.exports = {
   executableNameForPlatform,
   packageNameForPlatform,
-  supportedPackageNames
+  supportedPackageNames,
+  supportedPackages
 };

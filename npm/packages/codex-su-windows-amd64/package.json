@@ -1,0 +1,20 @@
+{
+  "name": "codex-su-windows-amd64",
+  "version": "0.1.2",
+  "description": "Windows x64 binary for codex-su.",
+  "license": "MIT",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin/codex-su.exe",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shayyz-code/codex-su.git"
+  }
+}

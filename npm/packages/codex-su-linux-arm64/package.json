@@ -1,0 +1,20 @@
+{
+  "name": "codex-su-linux-arm64",
+  "version": "0.1.2",
+  "description": "Linux arm64 binary for codex-su.",
+  "license": "MIT",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "files": [
+    "bin/codex-su",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shayyz-code/codex-su.git"
+  }
+}
