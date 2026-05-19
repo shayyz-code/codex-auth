@@ -18,8 +18,25 @@ Codex stores your authentication session in a single `auth.json` file. This tool
 
 ## Requirements
 
-- Go 1.24 or newer to build from source.
-- Homebrew or npm if you install through those package managers.
+These are only needed when building from source or running repository checks:
+
+- Go 1.24 or newer.
+- Node.js 22 or newer for npm packaging tests and release helpers.
+- `make`.
+
+No Go or Node.js installation is required when installing a prebuilt release through Homebrew, npm, or GitHub Releases.
+
+## Features
+
+- Save multiple Codex logins as named local account snapshots.
+- Switch accounts by exact name, detected email, or an arrow-key terminal picker.
+- Suggest the closest saved account when a name is mistyped.
+- Detect account emails from saved auth files and show them in prompts, lists, and rename flows.
+- Ask whether to save an unsaved live Codex login before switching away from it.
+- Sync the active account on startup by matching the live Codex auth file against saved snapshots.
+- Rename saved accounts without losing the active account marker.
+- Render a bordered account table for `list`.
+- Keep script-friendly `--json` output and configurable color with `--color auto|always|never`.
 
 ## Installation
 
@@ -79,28 +96,7 @@ codex-auth current
 
 ## Screenshots
 
-Interactive account selection uses a terminal picker with arrow-key navigation:
-
-```text
-? Select Codex account:
-  personal <personal@example.com>
-▸ work <work@example.com>
-
-Saved name: work
-Email: work@example.com
-```
-
-Account listing uses a stable table format for scanning and scripts:
-
-```text
-Saved Codex accounts
-┌────────┬──────────┬──────────────────────┐
-│ Active │ Name     │ Email                │
-├────────┼──────────┼──────────────────────┤
-│        │ personal │ personal@example.com │
-│ *      │ work     │ work@example.com     │
-└────────┴──────────┴──────────────────────┘
-```
+Screenshots for the terminal picker and account table will be added before the `v0.2.0` release.
 
 ### Command reference
 

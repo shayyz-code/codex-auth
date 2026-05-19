@@ -36,12 +36,22 @@ func TestREADMEDocumentsBadgesAndInstallation(t *testing.T) {
 	assertContains(t, readme, "go install github.com/shayyz-code/codex-auth/cmd/codex-auth@latest")
 }
 
+func TestREADMEDocumentsBuildRequirementsAndFeatures(t *testing.T) {
+	readme := readREADME(t)
+
+	assertContains(t, readme, "These are only needed when building from source or running repository checks:")
+	assertContains(t, readme, "No Go or Node.js installation is required when installing a prebuilt release")
+	assertContains(t, readme, "## Features")
+	assertContains(t, readme, "Switch accounts by exact name, detected email, or an arrow-key terminal picker.")
+	assertContains(t, readme, "Suggest the closest saved account when a name is mistyped.")
+	assertContains(t, readme, "Ask whether to save an unsaved live Codex login before switching away from it.")
+}
+
 func TestREADMEDocumentsScreenshotsAndNotices(t *testing.T) {
 	readme := readREADME(t)
 
 	assertContains(t, readme, "## Screenshots")
-	assertContains(t, readme, "Interactive account selection uses a terminal picker")
-	assertContains(t, readme, "┌────────┬──────────┬──────────────────────┐")
+	assertContains(t, readme, "Screenshots for the terminal picker and account table will be added before the `v0.2.0` release.")
 	assertContains(t, readme, "## Notice")
 	assertContains(t, readme, "Treat files under `~/.codex` as sensitive credentials.")
 	assertContains(t, readme, "Scoop, Winget, Arch AUR, Docker")
