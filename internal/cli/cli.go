@@ -7,11 +7,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
-	"runtime"
-	"strconv"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/shayyz-code/codex-auth/internal/accounts"
 	"github.com/spf13/cobra"
 )
@@ -654,7 +652,7 @@ func promptForAccount(rawStdin io.Reader, stdin *bufio.Reader, stdout io.Writer,
 
 	if stdinFile, stdinOK := rawStdin.(*os.File); stdinOK {
 		if stdoutFile, stdoutOK := stdout.(*os.File); stdoutOK && isTerminal(stdinFile) && isTerminal(stdoutFile) {
-			if name, err := promptForAccountMenu(stdinFile, stdoutFile, infos, current, ok, colorMode); err == nil {
+			if name, err := promptForAccountMenu(stdinFile, stdoutFile, infos, current, ok); err == nil {
 				return name, nil
 			}
 		}
@@ -663,23 +661,23 @@ func promptForAccount(rawStdin io.Reader, stdin *bufio.Reader, stdout io.Writer,
 	style := newStyle(stdout, colorMode)
 	if style.enabled {
 		fmt.Fprintln(stdout, style.title("Codex accounts"))
-		fmt.Fprintln(stdout, style.hint("Choose by number, saved name, or email."))
+		fmt.Fprintln(stdout, style.hint("Enter saved name or email."))
 	} else {
 		fmt.Fprintln(stdout, "Select account:")
 	}
-	for i, info := range infos {
+	for _, info := range infos {
 		label := formatAccountInfo(info)
 		if style.enabled {
 			status := ""
 			if ok && current == info.Name {
 				status = " " + style.color("active", "1", "32")
 			}
-			fmt.Fprintf(stdout, "  %s  %s%s\n", style.color(strconv.Itoa(i+1), "36"), style.account(label, ok && current == info.Name), status)
+			fmt.Fprintf(stdout, "  %s%s\n", style.account(label, ok && current == info.Name), status)
 		} else {
 			if ok && current == info.Name {
 				label += " (active)"
 			}
-			fmt.Fprintf(stdout, "  %d) %s\n", i+1, label)
+			fmt.Fprintf(stdout, "  %s\n", label)
 		}
 	}
 	fmt.Fprint(stdout, style.prompt("Select account: "))
@@ -689,13 +687,6 @@ func promptForAccount(rawStdin io.Reader, stdin *bufio.Reader, stdout io.Writer,
 		return "", err
 	}
 	line = strings.TrimSpace(line)
-	index, err := strconv.Atoi(line)
-	if err == nil {
-		if index < 1 || index > len(infos) {
-			return "", errors.New("No account selected. The operation was cancelled.")
-		}
-		return infos[index-1].Name, nil
-	}
 	for _, info := range infos {
 		if strings.EqualFold(info.Name, line) || strings.EqualFold(info.Email, line) {
 			return info.Name, nil
@@ -704,155 +695,44 @@ func promptForAccount(rawStdin io.Reader, stdin *bufio.Reader, stdout io.Writer,
 	return "", errors.New("No account selected. The operation was cancelled.")
 }
 
-func promptForAccountMenu(stdin *os.File, stdout *os.File, infos []accounts.AccountInfo, current string, hasCurrent bool, colorMode string) (string, error) {
-	restore, err := enableRawMode(stdin)
-	if err != nil {
-		return "", err
-	}
-	defer restore()
-
-	style := newStyle(stdout, colorMode)
-	selected := 0
+func promptForAccountMenu(stdin *os.File, stdout *os.File, infos []accounts.AccountInfo, current string, hasCurrent bool) (string, error) {
+	cursorPos := 0
 	for i, info := range infos {
 		if hasCurrent && info.Name == current {
-			selected = i
+			cursorPos = i
 			break
 		}
 	}
 
-	fmt.Fprint(stdout, "\x1b[?25l")
-	defer fmt.Fprint(stdout, "\x1b[?25h")
-
-	lines := 0
-	render := func() {
-		if lines > 0 {
-			fmt.Fprintf(stdout, "\x1b[%dA\x1b[J", lines)
-		}
-		lines = renderAccountMenu(stdout, infos, selected, current, hasCurrent, style)
+	prompt := promptui.Select{
+		Label:        "Select Codex account",
+		Items:        infos,
+		Size:         minInt(len(infos), 10),
+		CursorPos:    cursorPos,
+		HideSelected: true,
+		Stdin:        stdin,
+		Stdout:       stdout,
+		Templates: &promptui.SelectTemplates{
+			Label:    "{{ . }}",
+			Active:   "▸ {{ .Name | cyan }}{{ if .Email }} <{{ .Email }}>{{ end }}",
+			Inactive: "  {{ .Name }}{{ if .Email }} <{{ .Email }}>{{ end }}",
+			Selected: "{{ .Name }}",
+			Details: "\n" +
+				"Saved name: {{ .Name }}\n" +
+				"Email: {{ if .Email }}{{ .Email }}{{ else }}-{{ end }}",
+		},
+		Searcher: func(input string, index int) bool {
+			needle := strings.ToLower(input)
+			info := infos[index]
+			return strings.Contains(strings.ToLower(info.Name), needle) ||
+				strings.Contains(strings.ToLower(info.Email), needle)
+		},
 	}
-	render()
-
-	buffer := make([]byte, 8)
-	for {
-		n, err := stdin.Read(buffer)
-		if err != nil {
-			return "", err
-		}
-		key := parseMenuKey(buffer[:n])
-		switch key {
-		case "up":
-			if selected == 0 {
-				selected = len(infos) - 1
-			} else {
-				selected--
-			}
-			render()
-		case "down":
-			selected = (selected + 1) % len(infos)
-			render()
-		case "enter":
-			fmt.Fprint(stdout, "\n")
-			return infos[selected].Name, nil
-		case "cancel":
-			fmt.Fprint(stdout, "\n")
-			return "", errors.New("No account selected. The operation was cancelled.")
-		}
-	}
-}
-
-func renderAccountMenu(stdout io.Writer, infos []accounts.AccountInfo, selected int, current string, hasCurrent bool, style cliStyle) int {
-	lineCount := 0
-	title := "Select Codex account"
-	if style.enabled {
-		title = style.title(title)
-	}
-	fmt.Fprintln(stdout, title)
-	lineCount++
-	hint := "Use ↑/↓ or j/k, Enter to confirm, Esc to cancel."
-	if style.enabled {
-		hint = style.hint(hint)
-	}
-	fmt.Fprintln(stdout, hint)
-	lineCount++
-
-	nameWidth := len("Name")
-	emailWidth := len("Email")
-	for _, info := range infos {
-		if len(info.Name) > nameWidth {
-			nameWidth = len(info.Name)
-		}
-		if len(displayEmail(info.Email)) > emailWidth {
-			emailWidth = len(displayEmail(info.Email))
-		}
-	}
-	top, middle, bottom := tableBorders([]int{2, len("Active"), nameWidth, emailWidth})
-	fmt.Fprintln(stdout, top)
-	fmt.Fprintf(stdout, "│ %-2s │ %-6s │ %-*s │ %-*s │\n", "", "Active", nameWidth, "Name", emailWidth, "Email")
-	fmt.Fprintln(stdout, middle)
-	lineCount += 3
-	for i, info := range infos {
-		cursor := " "
-		if i == selected {
-			cursor = ">"
-		}
-		active := ""
-		isActive := hasCurrent && current == info.Name
-		if isActive {
-			active = "*"
-		}
-		fmt.Fprintf(stdout, "│ %-2s │ %-6s │ %-*s │ %-*s │\n", cursor, active, nameWidth, info.Name, emailWidth, displayEmail(info.Email))
-		lineCount++
-	}
-	fmt.Fprintln(stdout, bottom)
-	lineCount++
-	return lineCount
-}
-
-func parseMenuKey(input []byte) string {
-	if len(input) == 0 {
-		return ""
-	}
-	switch input[0] {
-	case '\r', '\n':
-		return "enter"
-	case 3, 27:
-		if len(input) >= 3 && input[0] == 27 && input[1] == '[' {
-			switch input[2] {
-			case 'A':
-				return "up"
-			case 'B':
-				return "down"
-			}
-		}
-		return "cancel"
-	case 'k', 'K':
-		return "up"
-	case 'j', 'J':
-		return "down"
-	}
-	return ""
-}
-
-func enableRawMode(stdin *os.File) (func(), error) {
-	if runtime.GOOS == "windows" {
-		return func() {}, errors.New("raw terminal mode is not available")
-	}
-	getState := exec.Command("stty", "-g")
-	getState.Stdin = stdin
-	state, err := getState.Output()
+	index, _, err := prompt.Run()
 	if err != nil {
-		return func() {}, err
+		return "", err
 	}
-	raw := exec.Command("stty", "raw", "-echo")
-	raw.Stdin = stdin
-	if err := raw.Run(); err != nil {
-		return func() {}, err
-	}
-	return func() {
-		restore := exec.Command("stty", strings.TrimSpace(string(state)))
-		restore.Stdin = stdin
-		_ = restore.Run()
-	}, nil
+	return infos[index].Name, nil
 }
 
 func isTerminal(file *os.File) bool {

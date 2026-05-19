@@ -61,12 +61,36 @@ func TestExecuteUsePromptsForAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stdout, stderr, code := runCLI(t, strings.NewReader("2\n"), "--codex-home", codexHome, "use")
+	stdout, stderr, code := runCLI(t, strings.NewReader("work\n"), "--codex-home", codexHome, "use")
 	if code != 0 {
 		t.Fatalf("use prompt exit code = %d, stderr = %q", code, stderr)
 	}
 	if !strings.Contains(stdout, "Select account:") || !strings.Contains(stdout, `Switched Codex auth to "work".`) {
 		t.Fatalf("use prompt stdout = %q", stdout)
+	}
+}
+
+func TestExecuteUsePromptDoesNotAcceptNumbers(t *testing.T) {
+	codexHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(codexHome, "accounts"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(codexHome, "accounts", "personal.json"), []byte(`{"token":"personal"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(codexHome, "accounts", "work.json"), []byte(`{"token":"work"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, code := runCLI(t, strings.NewReader("2\n"), "--codex-home", codexHome, "use")
+	if code == 0 {
+		t.Fatalf("use prompt unexpectedly accepted numeric selection, stdout = %q", stdout)
+	}
+	if strings.Contains(stdout, "1)") || strings.Contains(stdout, "2)") {
+		t.Fatalf("use prompt rendered numeric choices, stdout = %q", stdout)
+	}
+	if !strings.Contains(stderr, "No account selected") {
+		t.Fatalf("use prompt stderr = %q", stderr)
 	}
 }
 
@@ -281,20 +305,6 @@ func TestExecuteReportsCommandFailures(t *testing.T) {
 	}
 	if !strings.Contains(stderr, `unknown command "missing"`) {
 		t.Fatalf("stderr = %q", stderr)
-	}
-}
-
-func TestParseMenuKey(t *testing.T) {
-	cases := map[string][]byte{
-		"up":     []byte{27, '[', 'A'},
-		"down":   []byte{27, '[', 'B'},
-		"enter":  []byte{'\n'},
-		"cancel": []byte{27},
-	}
-	for want, input := range cases {
-		if got := parseMenuKey(input); got != want {
-			t.Fatalf("parseMenuKey(%v) = %q, want %q", input, got, want)
-		}
 	}
 }
 
