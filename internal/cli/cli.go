@@ -652,9 +652,11 @@ func promptForAccount(rawStdin io.Reader, stdin *bufio.Reader, stdout io.Writer,
 
 	if stdinFile, stdinOK := rawStdin.(*os.File); stdinOK {
 		if stdoutFile, stdoutOK := stdout.(*os.File); stdoutOK && isTerminal(stdinFile) && isTerminal(stdoutFile) {
-			if name, err := promptForAccountMenu(stdinFile, stdoutFile, infos, current, ok); err == nil {
-				return name, nil
+			name, err := promptForAccountMenu(stdinFile, stdoutFile, infos, current, ok)
+			if err != nil {
+				return "", accountPromptError(err)
 			}
+			return name, nil
 		}
 	}
 
@@ -693,6 +695,13 @@ func promptForAccount(rawStdin io.Reader, stdin *bufio.Reader, stdout io.Writer,
 		}
 	}
 	return "", errors.New("No account selected. The operation was cancelled.")
+}
+
+func accountPromptError(err error) error {
+	if errors.Is(err, promptui.ErrAbort) || errors.Is(err, promptui.ErrInterrupt) {
+		return errors.New("No account selected. The operation was cancelled.")
+	}
+	return err
 }
 
 func promptForAccountMenu(stdin *os.File, stdout *os.File, infos []accounts.AccountInfo, current string, hasCurrent bool) (string, error) {

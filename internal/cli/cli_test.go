@@ -3,10 +3,13 @@ package cli
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/manifoldco/promptui"
 )
 
 func TestExecuteRunsAccountWorkflowWithCodexHomeFlag(t *testing.T) {
@@ -91,6 +94,20 @@ func TestExecuteUsePromptDoesNotAcceptNumbers(t *testing.T) {
 	}
 	if !strings.Contains(stderr, "No account selected") {
 		t.Fatalf("use prompt stderr = %q", stderr)
+	}
+}
+
+func TestAccountPromptErrorCancelsOnInterrupt(t *testing.T) {
+	err := accountPromptError(promptui.ErrInterrupt)
+	if err == nil || !strings.Contains(err.Error(), "No account selected") {
+		t.Fatalf("accountPromptError(promptui.ErrInterrupt) = %v", err)
+	}
+}
+
+func TestAccountPromptErrorPreservesUnexpectedErrors(t *testing.T) {
+	original := errors.New("terminal failed")
+	if err := accountPromptError(original); !errors.Is(err, original) {
+		t.Fatalf("accountPromptError() = %v, want original error", err)
 	}
 }
 
