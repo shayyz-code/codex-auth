@@ -6,6 +6,25 @@ This project follows the spirit of Keep a Changelog and uses semantic versioning
 
 ## Unreleased
 
+## 0.2.0 - 2026-05-19
+
+### Added
+
+- Added closest-name suggestions when `use <name>` does not match a saved account.
+- Added prompts to save an unsaved live Codex login before switching accounts.
+- Added startup syncing that matches the live Codex auth file to saved snapshots and refreshes the current account.
+- Added account renaming with saved-name and detected-email context.
+- Added an arrow-key account picker for interactive terminal use.
+- Added bordered account table output for `list`.
+- Added `make version VERSION=<semver>` to update root and platform npm package versions together.
+- Added contributor documentation.
+
+### Changed
+
+- `save <name>` now always writes to the requested account name, even when the live auth matches another saved account.
+- `use` no longer accepts numeric prompt input; terminal selection uses the interactive picker and piped input accepts saved names or emails.
+- Cancelling the interactive picker exits cleanly instead of falling back to a secondary prompt.
+
 ## 0.1.4 - 2026-05-19
 
 ### Changed

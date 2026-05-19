@@ -1,4 +1,4 @@
-<h1 align="center">codex-auth</h1>
+<h1 align="center">CODEX-AUTH</h1>
 
 <p align="center">
   <a href="https://github.com/shayyz-code/codex-auth/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/shayyz-code/codex-auth/ci.yml?style=flat-square"></a>
@@ -61,7 +61,7 @@ codex-auth save <name>
 # switch active account
 codex-auth use <name>
 
-# or pick interactively by number, saved name, or email
+# or pick interactively with arrow keys
 codex-auth use
 
 # rename a saved account
@@ -99,7 +99,22 @@ Tagged releases publish GitHub binaries, npm packages, and the Homebrew tap form
 - `NPM_TOKEN` - npm automation token with publish access to `@shayyz-code/codex-auth` and the platform binary packages.
 - `HOMEBREW_TAP_TOKEN` - GitHub token with write access to `shayyz-code/homebrew-tap`.
 
-Release tags must use the `v*.*.*` format, for example `v0.1.4`.
+Release tags must use the `v*.*.*` format, for example `v0.2.0`.
+
+### Release checklist
+
+1. Update package metadata with `make version VERSION=0.2.0`.
+2. Update `CHANGELOG.md` with the release date and user-facing changes.
+3. Run `make check`.
+4. Commit the release preparation changes.
+5. Create and push the tag:
+
+```sh
+git tag v0.2.0
+git push origin main v0.2.0
+```
+
+The release workflow builds binaries, attaches checksums and Sigstore bundles to the GitHub Release, publishes npm packages, and updates the Homebrew tap.
 
 ## State Compatibility
 
