@@ -30,5 +30,5 @@
 - [x] Publish GitHub Release artifacts on version tags.
 - [x] Add Homebrew tap once the Go binary release is stable.
 - [x] Document required `NPM_TOKEN` and `HOMEBREW_TAP_TOKEN` GitHub Actions secrets.
-- [ ] Configure the documented release secrets in GitHub Actions before tagging.
+- [x] Configure the documented release secrets in GitHub Actions before tagging.
 - [ ] Evaluate Scoop, Winget, Arch AUR, and Docker distribution after the binary interface stabilizes.
