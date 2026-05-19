@@ -56,6 +56,14 @@ jobs:
       - name: Generate checksum
         run: shasum -a 256 "dist/${{ matrix.artifact }}" > "dist/${{ matrix.artifact }}.sha256"
 
+      - name: Install Cosign
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: sigstore/cosign-installer@v4.1.0
+
+      - name: Sign release binary
+        if: startsWith(github.ref, 'refs/tags/')
+        run: cosign sign-blob "dist/${{ matrix.artifact }}" --bundle "dist/${{ matrix.artifact }}.sigstore.json" --yes
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -71,6 +79,7 @@ jobs:
           files: |
             dist/${{ matrix.artifact }}
             dist/${{ matrix.artifact }}.sha256
+            dist/${{ matrix.artifact }}.sigstore.json
           fail_on_unmatched_files: true
   package-manager-plan:
     name: NPM package release

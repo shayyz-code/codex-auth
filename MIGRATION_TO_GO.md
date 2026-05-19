@@ -39,7 +39,7 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 
 - Done: `codex-su` is the only production command.
 - Done: tagged releases build cross-platform binaries with SHA-256 checksums.
-- Remaining: publish signatures for every binary artifact.
+- Done: tagged releases sign every binary artifact with Sigstore keyless signing.
 - Done: npm packaging uses a root launcher with platform-specific optional binary packages.
 - Done: tagged release automation stages, validates, and publishes platform npm packages before publishing the root npm package.
 
@@ -60,7 +60,7 @@ Move `codex-su` from a Node.js oclif CLI to a small Go binary while preserving c
 
 ## Release Design
 
-- GitHub Release: source archive, binaries, checksums, signatures.
+- GitHub Release: source archive, binaries, checksums, and Sigstore signature bundles.
 - Homebrew: generated formula in a tap after Go binaries exist.
 - npm: package command remains `codex-su`; implementation can point to the Go binary once migrated.
 - Other package managers: add only after checksums, install tests, and rollback documentation exist.

@@ -21,7 +21,7 @@
 - [x] Port command parsing and account operations behind small packages.
 - [x] Preserve command compatibility for `save`, `use`, `list`, and `current`.
 - [x] Produce cross-platform release binaries with checksums.
-- [ ] Sign release binaries.
+- [x] Sign release binaries.
 - [ ] Add Homebrew formula release automation after Go binaries exist.
 
 ## Distribution
